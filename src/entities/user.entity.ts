@@ -3,8 +3,8 @@ import { Privilege } from "./privilege.entity";
 import { Role } from "./role.entity";
 
 export enum AuthorizationType {
-    Standard,
-    Google,
+    Standard = 'Standard',
+    Google = 'Google',
 }
 
 @Entity()

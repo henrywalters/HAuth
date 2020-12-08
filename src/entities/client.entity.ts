@@ -2,6 +2,7 @@ import { BaseEntity, Column, CreateDateColumn, Entity, JoinTable, ManyToMany, Ma
 import { Application } from "./application.entity";
 import { Privilege } from "./privilege.entity";
 import { Role } from "./role.entity";
+import { AuthorizationType } from "./user.entity";
 
 export enum ClientType {
     WEB = 'Web',
@@ -39,13 +40,13 @@ export class Client extends BaseEntity {
 
     @ManyToMany(() => Role)
     @JoinTable({
-        name: "user_roles",
+        name: "client_roles",
     })
     public roles: Role[];
 
     @ManyToMany(() => Privilege)
     @JoinTable({
-        name: "user_privileges"
+        name: "client_privileges"
     })
     public privileges: Privilege[];
 }

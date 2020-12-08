@@ -27,4 +27,11 @@ export class Privilege extends BaseEntity {
 
     @ManyToOne(() => Application)
     public application: Application;
+
+    public static async createPrivilege(name: string) {
+        const priv = new Privilege();
+        priv.name = name;
+        await priv.save();
+        return priv;
+    }
 }

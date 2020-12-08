@@ -28,4 +28,12 @@ export class Role extends BaseEntity {
 
     @ManyToOne(() => Application)
     public application: Application;
+
+    public static async createRole(name: string, privileges: Array<Privilege>) {
+        const role = new Role();
+        role.name = name;
+        role.privileges = privileges;
+        await role.save();
+        return role;
+    }
 }
