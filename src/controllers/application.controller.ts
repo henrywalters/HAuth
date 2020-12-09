@@ -1,7 +1,7 @@
 import { Body, Controller, Post } from "@nestjs/common";
 import { ApplicationDto } from "src/dtos/application.dto";
 import { Application } from "src/entities/application.entity";
-import { Client, ClientType } from "src/entities/client.entity";
+import { Client } from "src/entities/client.entity";
 import { Privilege } from "src/entities/privilege.entity";
 import { Role } from "src/entities/role.entity";
 import Crypto from "./../utilities/crypto";
@@ -26,7 +26,6 @@ export class ApplicationController {
         await app.save();
 
         const client = new Client();
-        client.type = ClientType.SERVER;
         client.name = "Super User API";
         client.roles = [role];
         
@@ -39,6 +38,7 @@ export class ApplicationController {
         await client.save();
 
         return {
+            name: app.name,
             key: clientKey,
             secret: Crypto.getEncoded(clientSecret),
         }

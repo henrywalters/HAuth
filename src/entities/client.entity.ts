@@ -2,13 +2,6 @@ import { BaseEntity, Column, CreateDateColumn, Entity, JoinTable, ManyToMany, Ma
 import { Application } from "./application.entity";
 import { Privilege } from "./privilege.entity";
 import { Role } from "./role.entity";
-import { AuthorizationType } from "./user.entity";
-
-export enum ClientType {
-    WEB = 'Web',
-    SERVER = 'Server',
-    MOBILE = 'Mobile,'
-}
 
 @Entity()
 export class Client extends BaseEntity {
@@ -23,9 +16,6 @@ export class Client extends BaseEntity {
 
     @Column()
     public name: string;
-
-    @Column({type: "enum", enum: ClientType})
-    public type: ClientType;
 
     // A cryptographically random hex code to identify an application
     @Column()
