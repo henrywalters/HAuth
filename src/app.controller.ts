@@ -1,15 +1,16 @@
 import { Body, Controller, Get, Post, Query, Render } from '@nestjs/common';
 import { AppService } from './app.service';
+import { Authentication } from './lib/Authentication';
 import Crypto from "./utilities/crypto";
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly appService: AppService, private readonly authentication: Authentication) {}
 
   @Get("login")
   @Render('index')
-  getHello() {
-    return { message: "Hello World", clientId: process.env.GOOGLE_CLIENT_ID};
+  getLogin() {
+    return { clientId: process.env.GOOGLE_CLIENT_ID };
   }
 
   @Get("version")
@@ -21,7 +22,7 @@ export class AppController {
 
   @Post('login')
   public async postLogin(@Body() req: any) {
-    console.log(req);
+    const verified = await this.authentication.verifyGoogleIdToken(req.idtoken);
   }
 
   @Get('random')

@@ -39,6 +39,7 @@ export class ApplicationController {
 
         return {
             name: app.name,
+            appId: app.id,
             key: clientKey,
             secret: Crypto.getEncoded(clientSecret),
         }
