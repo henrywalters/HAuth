@@ -1,11 +1,37 @@
 import * as crypto from 'crypto';
 
+export interface KeyPair {
+    publicKey: string;
+    privateKey: string;
+}
+
 export default class Crypto {
     public static async randomBuffer(length: number): Promise<Buffer> {
         return new Promise<Buffer>((res, rej) => {
             crypto.randomBytes(length, (err, buffer) => {
                 if (err) rej(err);
                 res(buffer);
+            })
+        })
+    }
+
+    public static async generateKeyPair(): Promise<KeyPair> {
+        return new Promise<KeyPair>((res, rej) => {
+            crypto.generateKeyPair('rsa', {
+                modulusLength: 4096,
+                publicKeyEncoding: {
+                    type: 'spki',
+                    format: 'pem',
+                },
+                privateKeyEncoding: {
+                    type: 'pkcs8',
+                    format: 'pem',
+                    cipher: 'aes-256-cbc',
+                    passphrase: process.env.APP_SECRET
+                }
+            }, (err, pub, priv) => {
+                if (err) rej(err);
+                else res({privateKey: priv, publicKey: pub});
             })
         })
     }
@@ -41,6 +67,7 @@ export default class Crypto {
     }
 
     public static getText(buffer: Buffer) {
+        console.log(process.env.TEXT_ENCODING)
         return buffer.toString(process.env.TEXT_ENCODING as BufferEncoding);
     }
 }

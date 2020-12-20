@@ -1,4 +1,5 @@
 import { BaseEntity, Column, CreateDateColumn, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Organization } from "./organization.entity";
 import { Privilege } from "./privilege.entity";
 import { Role } from "./role.entity";
 
@@ -24,8 +25,8 @@ export class User extends BaseEntity {
     @Column()
     public email: string;
 
-    @Column()
-    public thumbnailUrl: string;
+    @Column({nullable: true})
+    public thumbnailUrl?: string;
 
     @Column({type: "enum", enum: AuthorizationType})
     public authType: AuthorizationType;
@@ -33,15 +34,40 @@ export class User extends BaseEntity {
     @Column({nullable: true})
     public password?: string;
 
-    @ManyToMany(() => Role)
+    @ManyToMany(() => Organization, {eager: true})
+    @JoinTable({
+        name: "user_organizations",
+    })
+    public organizations: Organization[];
+
+    @ManyToMany(() => Role, {eager: true})
     @JoinTable({
         name: "user_roles",
     })
     public roles: Role[];
 
-    @ManyToMany(() => Privilege)
+    @ManyToMany(() => Privilege, {eager: true})
     @JoinTable({
         name: "user_privileges"
     })
     public privileges: Privilege[];
+
+    // Checks if a user has a privilege directly or through a role
+    public hasPrivilege(privilege: Privilege) {
+        for (const priv of this.privileges) {
+            if (priv.id === privilege.id) {
+                return true;
+            }
+        }
+
+        for (const role of this.roles) {
+            for (const priv of role.privileges) {
+                if (priv.id === privilege.id) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 }

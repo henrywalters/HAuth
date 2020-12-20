@@ -1,6 +1,11 @@
-import { Body, Controller, Get, Post, Query, Render } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Post, Query, Render, UseGuards } from '@nestjs/common';
 import { AppService } from './app.service';
-import { Authentication } from './lib/Authentication';
+import { RefreshDto, StandardLoginDto, StandardRegisterDto } from './dtos/authentication.dto';
+import { ResponseDto } from './dtos/response.dto';
+import { User } from './entities/user.entity';
+import { Authentication, TokenType } from './lib/Authentication';
+import { Authorize } from './lib/Authorization.guard';
+import Language from './lib/Language';
 import Crypto from "./utilities/crypto";
 
 @Controller()
@@ -20,23 +25,41 @@ export class AppController {
     }
   }
 
+  @Get('self')
+  @UseGuards(Authorize)
+  public async getSelf(@Headers("user") user: User) {
+    return ResponseDto.Success(user);
+  }
+
   @Post('login')
-  public async postLogin(@Body() req: any) {
-    const verified = await this.authentication.verifyGoogleIdToken(req.idtoken);
+  public async postLogin(@Body() req: StandardLoginDto) {
+    const res = await this.authentication.verifyStandardUser(req);
+    if (!res.success) return res;
+    return ResponseDto.Success({
+      'accessToken': await Authentication.generateAccessToken(res.result),
+      'refreshToken': await Authentication.generateRefreshToken(res.result),
+    })
   }
 
-  @Get('random')
-  public async getRandom(@Query('size') size?: string, format: BufferEncoding = 'hex') {
-    return (await Crypto.randomBuffer(size ? parseInt(size) : 48)).toString(format);
+  @Post('refresh')
+  public async postRefresh(@Body() req: RefreshDto) {
+    try {
+      const decoded = await Authentication.validateToken(req.refreshToken);
+      if (decoded.type !== TokenType.REFRESH_TOKEN) {
+        console.warn("Tried to refresh token with access token");
+        throw new Error();
+      }
+      return ResponseDto.Success({
+        'accessToken': await Authentication.generateAccessToken(decoded.user),
+        'refreshToken': await Authentication.generateRefreshToken(decoded.user),
+      });
+    } catch (e) {
+      return ResponseDto.Error(Language.FAILED_REFRESH);
+    }
   }
 
-  @Get('hash')
-  public async getHash(@Query('string') str?: string, format: BufferEncoding = 'hex') {
-    return (Crypto.hash(Buffer.from(str, 'utf-8')).toString(format));
-  }
-
-  @Get('compare')
-  public async compare(@Query('a') a: string, @Query('b') b: string) {
-    return Crypto.compare(Crypto.hash(Crypto.getBufferFromText(a)), Crypto.getBufferFromEncoded(b));
+  @Post('register')
+  public async postRegister(@Body() req: StandardRegisterDto) {
+    return await this.authentication.createStandardUser(req);
   }
 }

@@ -20,7 +20,7 @@ export class Role extends BaseEntity {
     @Column()
     public name: string;
 
-    @ManyToMany(() => Privilege)
+    @ManyToMany(() => Privilege, {eager: true})
     @JoinTable({
         name: "role_privileges"
     })
