@@ -8,7 +8,7 @@ import { Authorize } from './lib/Authorization.guard';
 import Language from './lib/Language';
 import Crypto from "./utilities/crypto";
 
-@Controller()
+@Controller("v1")
 export class AppController {
   constructor(private readonly appService: AppService, private readonly authentication: Authentication) {}
 

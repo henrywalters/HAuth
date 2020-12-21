@@ -1,4 +1,4 @@
-import { Body, Controller, Headers, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Headers, Post, UseGuards } from "@nestjs/common";
 import { OrganizationDto } from "src/dtos/organization.dto";
 import { ResponseDto } from "src/dtos/response.dto";
 import { Organization } from "src/entities/organization.entity";
@@ -17,5 +17,16 @@ export class OrganizationController {
         org.owner = user;
         await org.save();
         return ResponseDto.Success(org);
+    }
+
+    @Get()
+    @UseGuards(Authorize)
+    public async getOwnedOrganizations(@Headers("user") user: User) {
+        console.log(user);
+        return ResponseDto.Success(await Organization.find({
+            where: {
+                owner: user,
+            }
+        }))
     }
 }

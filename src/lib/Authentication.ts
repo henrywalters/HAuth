@@ -57,6 +57,12 @@ export class Authentication {
                 errors['organizationId'] = Language.ORGANIZATION_404;
             }
 
+            const domain = req.email.split('@')[1];
+            
+            if (org.restrictUsersToDomain && domain !== org.domain) {
+                errors['email'] = 'Must have an email belonging to domain: ' + org.domain;
+            }
+
             user.organizations.push(org);
         }
 
