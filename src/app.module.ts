@@ -6,6 +6,7 @@ import {TypeOrmModule} from "@nestjs/typeorm";
 import { ApplicationController } from './controllers/application.controller';
 import { Authentication } from './lib/Authentication';
 import { AuthenticationMiddleware } from './lib/Authentication.middleware';
+import { OrganizationController } from './controllers/organization.controller';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { AuthenticationMiddleware } from './lib/Authentication.middleware';
   }),
   TypeOrmModule.forRoot(),
   ],
-  controllers: [AppController, ApplicationController],
+  controllers: [AppController, ApplicationController, OrganizationController],
   providers: [AppService, Authentication],
 })
 export class AppModule {

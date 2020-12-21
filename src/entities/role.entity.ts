@@ -11,7 +11,7 @@ export class Role extends BaseEntity {
     public createdAt: Date;
 
     @UpdateDateColumn()
-    public deletedAt: Date;
+    public updatedAt: Date;
 
     // Locked controls whether a privileges name may ever be modifed
     @Column({type: "bool", default: false})

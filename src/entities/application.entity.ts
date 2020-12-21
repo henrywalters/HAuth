@@ -13,7 +13,7 @@ export class Application extends BaseEntity {
     public createdAt: Date;
 
     @UpdateDateColumn()
-    public deletedAt: Date;
+    public updatedAt: Date;
 
     @Column()
     public name: string;

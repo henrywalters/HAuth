@@ -100,12 +100,13 @@ export class Authentication {
     public static async generateAccessToken(user: User) {
         return new Promise<string>((res, rej) => {
             jwt.sign({
-                exp: parseInt(process.env.ACCESS_TOKEN_DUR),
-                subject: TokenType.ACCESS_TOKEN,
                 data: {
                     userId: user.id,
                 }
-            }, process.env.APP_SECRET, (err, token) => {
+            }, process.env.APP_SECRET, {
+                expiresIn: parseInt(process.env.ACCESS_TOKEN_DUR),
+                subject: TokenType.ACCESS_TOKEN, 
+            }, (err, token) => {
                 console.log(err, token)
                 if (err) rej(err);
                 else res(token);
@@ -116,12 +117,14 @@ export class Authentication {
     public static async generateRefreshToken(user: User) {
         return new Promise<string>((res, rej) => {
             jwt.sign({
-                exp: parseInt(process.env.REFRESH_TOKEN_DUR),
-                subject: TokenType.REFRESH_TOKEN,
                 data: {
                     userId: user.id,
                 }
-            }, process.env.APP_SECRET, (err, token) => {
+            }, process.env.APP_SECRET, {
+                expiresIn: parseInt(process.env.REFRESH_TOKEN_DUR),
+                subject: TokenType.REFRESH_TOKEN,
+            },
+            (err, token) => {
                 if (err) rej(err);
                 else res(token);
             })
@@ -133,7 +136,7 @@ export class Authentication {
             jwt.verify(token, process.env.APP_SECRET, async (err, decoded) => {
                 if (err) rej(err);
                 res({
-                    type: decoded.subject,
+                    type: decoded.sub,
                     user: await User.findOneOrFail(decoded.data.userId)
                 });
             })

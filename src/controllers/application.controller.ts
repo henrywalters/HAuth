@@ -1,7 +1,9 @@
 import { Body, Controller, Post } from "@nestjs/common";
 import { ApplicationDto } from "src/dtos/application.dto";
+import { ResponseDto } from "src/dtos/response.dto";
 import { Application } from "src/entities/application.entity";
 import { Client } from "src/entities/client.entity";
+import { Organization } from "src/entities/organization.entity";
 import { Privilege } from "src/entities/privilege.entity";
 import { Role } from "src/entities/role.entity";
 import Crypto from "./../utilities/crypto";
@@ -12,36 +14,12 @@ export class ApplicationController {
     public async createApp(@Body() req: ApplicationDto) {
         const app = new Application();
         app.name = req.name;
-        
-        // Initialize base application privileges
-
-        const write = await Privilege.createPrivilege("Super User Write");
-        const read = await Privilege.createPrivilege("Super User Read");
-
-        const role = await Role.createRole("Super User", [read, write]);
-
-        app.privileges = [read, write];
-        app.roles = [role];
+        app.organization = await Organization.findOneOrFail(req.organizationId);
+        app.roles = [];
+        app.privileges = [];
 
         await app.save();
 
-        const client = new Client();
-        client.name = "Super User API";
-        client.roles = [role];
-        
-        const clientKey = (await Crypto.randomBuffer(48)).toString('hex');
-        const clientSecret = await Crypto.randomBuffer(128);
-
-        client.key = clientKey;
-        client.secret = Crypto.getEncoded(Crypto.hash(clientSecret));
-
-        await client.save();
-
-        return {
-            name: app.name,
-            appId: app.id,
-            key: clientKey,
-            secret: Crypto.getEncoded(clientSecret),
-        }
+        return ResponseDto.Success(app);
     }
 }

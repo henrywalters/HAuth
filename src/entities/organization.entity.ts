@@ -1,5 +1,6 @@
-import { BaseEntity, Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { BaseEntity, Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Application } from "./application.entity";
+import { User } from "./user.entity";
 
 @Entity()
 export class Organization extends BaseEntity {
@@ -10,13 +11,16 @@ export class Organization extends BaseEntity {
     public createdAt: Date;
 
     @UpdateDateColumn()
-    public deletedAt: Date;
-
+    public updatedAt: Date;
+    
     @Column()
     public name: string;
 
     @Column()
     public domain: string;
+
+    @ManyToOne(() => User)
+    public owner: User;
 
     @Column({type: "boolean", default: false})
     public restrictUsersToDomain: boolean;
