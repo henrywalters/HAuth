@@ -1,4 +1,4 @@
-import { IsBoolean, IsString } from "class-validator";
+import { IsBoolean, IsEmail, IsString } from "class-validator";
 import { IsDomain } from "src/validators/domain.validator";
 
 export class OrganizationDto {
@@ -12,4 +12,9 @@ export class OrganizationDto {
 
     @IsBoolean()
     public restrictUsersToDomain: boolean;
+}
+
+export class AddUserDto {
+    @IsEmail()
+    public email: string;
 }

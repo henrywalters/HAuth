@@ -1,4 +1,4 @@
-import { BaseEntity, Column, CreateDateColumn, Entity, JoinTable, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { BaseEntity, Column, CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Client } from "./client.entity";
 import { Organization } from "./organization.entity";
 import { Privilege } from "./privilege.entity";
@@ -24,9 +24,15 @@ export class Application extends BaseEntity {
     @OneToMany(() => Client, client => client.application)
     public clients: Client[];
 
-    @OneToMany(() => Role, roles => roles.application)
+    @ManyToMany(() => Role)
+    @JoinTable({
+        name: 'application_roles',
+    })
     public roles: Role[];
 
-    @OneToMany(() => Privilege, privilege => privilege.application)
+    @ManyToMany(() => Privilege)
+    @JoinTable({
+        name: 'application_privileges'
+    })
     public privileges: Privilege[];
 }

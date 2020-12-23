@@ -15,7 +15,7 @@ export class Role extends BaseEntity {
 
     // Locked controls whether a privileges name may ever be modifed
     @Column({type: "bool", default: false})
-    public locked: true;
+    public locked: boolean;
 
     @Column()
     public name: string;
@@ -29,10 +29,11 @@ export class Role extends BaseEntity {
     @ManyToOne(() => Application)
     public application: Application;
 
-    public static async createRole(name: string, privileges: Array<Privilege>) {
+    public static async createRole(name: string, privileges: Array<Privilege>, locked: boolean = false) {
         const role = new Role();
         role.name = name;
         role.privileges = privileges;
+        role.locked = locked;
         await role.save();
         return role;
     }

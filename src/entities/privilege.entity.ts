@@ -1,4 +1,4 @@
-import { BaseEntity, Column, CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { BaseEntity, Column, CreateDateColumn, Entity, getConnection, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Application } from "./application.entity";
 
 @Entity()
@@ -14,7 +14,7 @@ export class Privilege extends BaseEntity {
 
     // Locked controls whether a privileges name may ever be modifed
     @Column({type: "bool", default: false})
-    public locked: true;
+    public locked: boolean;
 
     @Column()
     public name: string;
@@ -25,13 +25,19 @@ export class Privilege extends BaseEntity {
     })
     public privilegesAllowedToEnable: Privilege[];
 
-    @ManyToOne(() => Application)
-    public application: Application;
-
-    public static async createPrivilege(name: string) {
+    public static async createPrivilege(name: string, locked = false) {
         const priv = new Privilege();
         priv.name = name;
+        priv.locked = locked;
         await priv.save();
         return priv;
+    }
+
+    public static async createPrivileges(names: string[], locked = false) {
+        const privileges = [];
+        for (const name of names) {
+            privileges.push(await this.createPrivilege(name, locked));
+        }
+        return privileges;
     }
 }

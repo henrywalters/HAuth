@@ -34,7 +34,7 @@ export class User extends BaseEntity {
     @Column({nullable: true})
     public password?: string;
 
-    @ManyToMany(() => Organization, {eager: true})
+    @ManyToMany(() => Organization)
     @JoinTable({
         name: "user_organizations",
     })
