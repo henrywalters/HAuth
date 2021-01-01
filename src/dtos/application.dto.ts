@@ -4,7 +4,4 @@ export class ApplicationDto {
     @IsString()
     @IsNotEmpty()
     public name: string;
-
-    @IsString()
-    public organizationId: string;
 }

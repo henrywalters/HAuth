@@ -40,4 +40,18 @@ export class Privilege extends BaseEntity {
         }
         return privileges;
     }
+
+    public static async getOrganizationPrivilege(name: string, orgId: string) {
+        return await Privilege.createQueryBuilder('p')
+            .innerJoin('organization_privileges', 'op', 'op.organizationId = :orgId and op.privilegeId = p.id', {orgId})
+            .where('p.name = :name', {name})
+            .getOne();
+    }
+
+    public static async getApplicationPrivilege(name: string, appId: string) {
+        return await Privilege.createQueryBuilder('p')
+            .innerJoin('application_privileges', 'ap', 'ap.application_id = :appId and ap.privilegeId = p.id', {appId})
+            .where('p.name = :name', {name})
+            .getOne();
+    }
 }

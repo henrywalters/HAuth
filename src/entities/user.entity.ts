@@ -52,6 +52,19 @@ export class User extends BaseEntity {
     })
     public privileges: Privilege[];
 
+    public static async findByEmail(email: string) {
+        return await User.findOne({
+            where: {
+                email,
+            }
+        });
+    }
+
+    public belongsToDomain(domain: string) {
+        const userDomain = this.email.split('@')[1];
+        return userDomain === domain;
+    }
+
     // Checks if a user has a privilege directly or through a role
     public hasPrivilege(privilege: Privilege) {
         for (const priv of this.privileges) {

@@ -7,6 +7,7 @@ import { ApplicationController } from './controllers/application.controller';
 import { Authentication } from './lib/Authentication';
 import { AuthenticationMiddleware } from './lib/Authentication.middleware';
 import { OrganizationController } from './controllers/organization.controller';
+import { LoadOrgMiddleware } from './lib/LoadOrg.middleware';
 
 @Module({
   imports: [
@@ -23,5 +24,8 @@ export class AppModule {
   async configure(consumer: MiddlewareConsumer) {
     consumer.apply(AuthenticationMiddleware)
     .forRoutes({path: "*", method: RequestMethod.ALL})
+
+    consumer.apply(LoadOrgMiddleware)
+    .forRoutes(OrganizationController);
   }
 }
