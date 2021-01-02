@@ -1,51 +1,65 @@
-# HAuth
-Hatuh is an authorization server similar to [Microsoft Auth Server] (https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-v2-protocols)
-## Description
+# Hauth - fast and simple authentication and authorization for businesses
 
-Authorization & authentication microservice for application and user access to other services.
+![Hoth image](https://c4.wallpaperflare.com/wallpaper/99/807/813/star-wars-battlefront-star-wars-video-games-x-wing-wallpaper-preview.jpg)
+
+HAuth is an authorization microservice which provides:
+
+- Organization (tenants) management
+- Ability to create applications within an organization
+- Fine grain control of applications with configurable and grantable permissions / roles
+- User authentication via standard login method and OAuth
+
+# Core Concepts
+
+The basis of HAuth is the `Orgnaization`. Each organization has a unique domain associated with it. Organizations may optionally restrict users to this domain. 
+
+Within each Organization exists many `Applications`. An application is a service that is accessible to users within an organization. `Privileges` may be created for an application (or organiation) which may be checked by the application for authentication. Decorators are provided in the `HauthLib`. Many privileges may be contained within a `Role` to ease administration. 
+
+`Users` exist independently of organizations. A user is uniquely defined by their email. Users may be added to an organization and may be assigned organization and application level privileges and / or roles.
+
+# Getting Started
 
 ## Installation
 
-```bash
-$ npm install
+To run the app on your machine, you will need a database such as `mysql` and `Node v14`. 
+
+After cloning the directory and navigating to it, run:
+
+```npm install```
+
+Create an `.env` file in the project directory with the following elements:
+
 ```
+DB_TYPE=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=[REPLACE ME]
+DB_USER=[REPLACE ME]
+DB_PASS=[REPLACE ME]
+
+APP_SECRET=[REPLACE ME]
+CRYPTO_ALGORITHM=sha256
+CRYPTO_ENCODING=hex
+TEXT_ENCODING=utf8
+
+ACCESS_TOKEN_DUR=3600
+REFRESH_TOKEN_DUR=31536000
+```
+
+Run the database migrations
+
+```npm run build && npm run typeorm -- migration:run```
+
+You are now ready to go
 
 ## Running the app
 
-```bash
-# development
-$ npm run start
+To run the app, simply use the command:
 
-# watch mode
-$ npm run start:dev
+```npm run start:dev```.
 
-# production mode
-$ npm run start:prod
+To view documentation, navigate to:
+
 ```
-
-## Test
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+http://localhost:3000/v1/docs
 ```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-  Nest is [MIT licensed](LICENSE).

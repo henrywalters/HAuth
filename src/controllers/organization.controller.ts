@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Param, Post, Put, Res, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Head, Headers, Param, Post, Put, Res, UseGuards } from "@nestjs/common";
 import { ApplicationDto } from "src/dtos/application.dto";
 import { AddUserDto, OrganizationDto } from "src/dtos/organization.dto";
 import { ResponseDto } from "src/dtos/response.dto";
@@ -46,10 +46,10 @@ export class OrganizationController {
     }
 
     @Post(":id/user")
-    @UseGuards(new AuthorizeForOrg('CREATE_USER'))
+    @UseGuards(new AuthorizeForOrg('ADD_USER'))
     public async addUser(@Headers("org") org: Organization, @Body() req: AddUserDto) {
         try {
-            return await ResponseDto.Success(org.addUser(req.email));
+            return await ResponseDto.Success(await org.addUser(req.email));
         } catch (e) {
             return await ResponseDto.Error(e.message);
         }
@@ -57,15 +57,13 @@ export class OrganizationController {
     
     @Post(':id/application')
     @UseGuards(new AuthorizeForOrg('ADD_APPLICATION'))
-    public async createApp(@Body() req: ApplicationDto, @Param("id") id: string) {
-        const app = new Application();
-        app.name = req.name;
-        app.organization = await Organization.findOneOrFail(id);
-        app.roles = [];
-        app.privileges = [];
+    public async createApp(@Headers("org") org: Organization, @Body() req: ApplicationDto) {
+        return ResponseDto.Success(await Application.createFromDTO(org, req));
+    }
 
-        await app.save();
-
-        return ResponseDto.Success(app);
+    @Get(":id/application")
+    @UseGuards(new AuthorizeForOrg('VIEW_INFO'))
+    public async getApps(@Headers("org") org: Organization) {
+        return ResponseDto.Success(await org.getApplications());
     }
 }

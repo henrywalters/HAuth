@@ -1,3 +1,4 @@
+import { ApplicationDto } from "src/dtos/application.dto";
 import { BaseEntity, Column, CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Client } from "./client.entity";
 import { Organization } from "./organization.entity";
@@ -35,4 +36,18 @@ export class Application extends BaseEntity {
         name: 'application_privileges'
     })
     public privileges: Privilege[];
+
+    public async updateFromDTO(dto: ApplicationDto) {
+        this.name = dto.name;
+        await this.save();
+    }
+
+    public static async createFromDTO(org: Organization, dto: ApplicationDto) {
+        const app = new Application();
+        app.organization = org;
+        app.roles = [];
+        app.privileges = [];
+        await app.updateFromDTO(dto);
+        return app;
+    }
 }

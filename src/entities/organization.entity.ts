@@ -75,6 +75,8 @@ export class Organization extends BaseEntity {
         newUser.organizations.push(this);
         await newUser.save();
 
+        console.log(newUser);
+
         return newUser;
     }
 
@@ -82,6 +84,14 @@ export class Organization extends BaseEntity {
         const query = await User.createQueryBuilder('user')
             .innerJoin('user.organizations', 'organization', 'organization.id = :id', {id: this.id});
         return await query.getMany();
+    }
+
+    public async getApplications() {
+        return await Application.find({
+            where: {
+                organization: this,
+            }
+        })
     }
 
     public async updateFromDTO(dto: OrganizationDto) {
