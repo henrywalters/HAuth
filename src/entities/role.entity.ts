@@ -1,5 +1,6 @@
 import { BaseEntity, Column, CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Application } from "./application.entity";
+import { Organization } from "./organization.entity";
 import { Privilege } from "./privilege.entity";
 
 @Entity()
@@ -19,6 +20,9 @@ export class Role extends BaseEntity {
 
     @Column()
     public name: string;
+
+    @ManyToMany(() => Organization, org => org.roles)
+    public organizations: Organization[];
 
     @ManyToMany(() => Privilege, {eager: true})
     @JoinTable({

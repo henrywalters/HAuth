@@ -1,4 +1,5 @@
 import { OrganizationDto } from "src/dtos/organization.dto";
+import { PrivilegeDto } from "src/dtos/privilege.dto";
 import Language from "src/lib/Language";
 import { BaseEntity, Column, CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Application } from "./application.entity";
@@ -13,12 +14,15 @@ const DEFAULT_ORG_PRIVILEGES: string[] = [
     'REMOVE_USER',
     'VIEW_USER',
     'ADD_APPLICATION',
+    'VIEW_APPLICATION',
     'EDIT_APPLICATION',
     'REMOVE_APPLICATION',
     'ADD_PRIVILEGE',
+    'VIEW_PRIVILEGE',
     'REMOVE_PRIVILEGE',
     'EDIT_PRIVILEGE',
     'ADD_ROLE',
+    'VIEW_ROLE',
     'REMOVE_ROLE',
     'EDIT_ROLE',
 ];
@@ -80,6 +84,42 @@ export class Organization extends BaseEntity {
         return newUser;
     }
 
+    public async getPrivileges() {
+        return await Privilege.createQueryBuilder('p')
+            .innerJoin('p.organizations', 'organization', 'organization.id = :id', {id: this.id})
+            .getMany();
+    }
+
+    public async addPrivilege(dto: PrivilegeDto) {
+        if (await Privilege.getOrganizationPrivilege(dto.name, this.id)) {
+            throw new Error("Privilege with this name already exists");
+        }
+
+        const privilege = await Privilege.createPrivilege(dto.name, dto.locked);
+
+        this.privileges = this.privileges ? this.privileges : [];
+        this.privileges.push(privilege);
+
+        await this.save();
+
+        return privilege;
+    }
+
+    public async removePrivilege(id: string) {
+        this.privileges = this.privileges.filter(p => p.id !== id);
+        await this.save();
+    }
+
+    public async removeUser(email: string) {
+        const user = await User.createQueryBuilder('user')
+            .innerJoin('user.organizations', 'organization', 'organization.id = :id', {id: this.id})
+            .where('user.email = :email', {email,})
+            .getOne();
+
+        user.organizations = user.organizations.filter(org => org.id !== this.id);
+        await user.save();
+    }
+
     public async getUsers() {
         const query = await User.createQueryBuilder('user')
             .innerJoin('user.organizations', 'organization', 'organization.id = :id', {id: this.id});
@@ -92,6 +132,13 @@ export class Organization extends BaseEntity {
                 organization: this,
             }
         })
+    }
+
+    public async removeApplication(id: string) {
+        const application = await Application.findOne(id);
+        if (application.organization.id === this.id) {
+            await application.remove();
+        }
     }
 
     public async updateFromDTO(dto: OrganizationDto) {
@@ -109,7 +156,11 @@ export class Organization extends BaseEntity {
 
         owner.roles = owner.roles ? owner.roles : [];
         owner.roles.push(ownerRole);
+
         await owner.save();
+
+        org.privileges = ownerPrivileges;
+        org.roles = [ownerRole];
 
         await org.updateFromDTO(dto);
 

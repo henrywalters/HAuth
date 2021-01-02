@@ -28,6 +28,7 @@ export class AuthorizeForOrg implements CanActivate {
         console.log(privilege);
 
         if (!privilege) {
+            console.warn(`Privilege ${this.privilegeName} does not exist`);
             return false;
         }
 
