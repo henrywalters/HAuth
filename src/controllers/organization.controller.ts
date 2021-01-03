@@ -1,10 +1,8 @@
 import { Body, Controller, Delete, Get, Head, Headers, Param, Post, Put, Res, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation } from "@nestjs/swagger";
-import { ApplicationDto } from "src/dtos/application.dto";
 import { AddUserDto, OrganizationDto } from "src/dtos/organization.dto";
 import { PrivilegeDto } from "src/dtos/privilege.dto";
 import { ResponseDto } from "src/dtos/response.dto";
-import { Application } from "src/entities/application.entity";
 import { Organization } from "src/entities/organization.entity";
 import { User } from "src/entities/user.entity";
 import { Authorize } from "src/lib/Authorization.guard";
@@ -46,78 +44,12 @@ export class OrganizationController {
         }))
     }
 
-    @Get(":id/user")
-    @UseGuards(new AuthorizeForOrg('VIEW_USER'))
-    @ApiOperation({summary: 'View users in organization'})
-    public async getUsers(@Headers("org") org: Organization) {
-        return ResponseDto.Success(await org.getUsers());
-    }
-
-    @Post(":id/user")
-    @UseGuards(new AuthorizeForOrg('ADD_USER'))
-    @ApiOperation({summary: 'Add user to organization'})
-    public async addUser(@Headers("org") org: Organization, @Body() req: AddUserDto) {
-        try {
-            return await ResponseDto.Success(await org.addUser(req.email));
-        } catch (e) {
-            return await ResponseDto.Error(e.message);
-        }
-    }
-
-    @Delete(':id/user')
-    @UseGuards(new AuthorizeForOrg('REMOVE_USER'))
-    @ApiOperation({summary: 'Remove user from organization'})
-    public async removeUser(@Headers('org') org: Organization, @Body() req: AddUserDto) {
-        try {
-            return await ResponseDto.Success(await org.removeUser(req.email));
-        } catch (e) {
-            return await ResponseDto.Error(e.message);
-        }
-    }
-
-    @Get(":id/privilege")
-    @UseGuards(new AuthorizeForOrg('VIEW_PRIVILEGE'))
-    @ApiOperation({summary: 'View organization privileges'})
-    public async viewPrivileges(@Headers("org") org: Organization) {
-        return ResponseDto.Success(await org.getPrivileges());
-    }
-
-    @Post(":id/privilege")
-    @UseGuards(new AuthorizeForOrg('ADD_PRIVILEGE'))
-    @ApiOperation({summary: 'Create a new privilege for the organization'})
-    public async createPrivilege(@Headers("org") org: Organization, @Body() req: PrivilegeDto) {
-        try {
-            return ResponseDto.Success(await org.addPrivilege(req));
-        } catch (e) {
-            return ResponseDto.Error(e.message);
-        }
+    @Get(":id/role")
+    @UseGuards(new AuthorizeForOrg('VIEW_ROLE'))
+    @ApiOperation({summary: 'View organization roles'})
+    public async getRoles(@Headers("org") org: Organization) {
+        return ResponseDto.Success(await org.getRoles());
     }
     
-    @Post(':id/application')
-    @UseGuards(new AuthorizeForOrg('ADD_APPLICATION'))
-    @ApiOperation({summary: 'Create an application within an organization'})
-    public async createApp(@Headers("org") org: Organization, @Body() req: ApplicationDto) {
-        return ResponseDto.Success(await Application.createFromDTO(org, req));
-    }
-
-    @Get(":id/application")
-    @UseGuards(new AuthorizeForOrg('VIEW_APPLICATION'))
-    @ApiOperation({summary: 'View applications within an organization'})
-    public async getApps(@Headers("org") org: Organization) {
-        return ResponseDto.Success(await org.getApplications());
-    }
-
-    @Get(":id/application/:appId")
-    @UseGuards(new AuthorizeForOrg('VIEW_APPLICATION'))
-    @ApiOperation({summary: 'View an applications details'})
-    public async getApp(@Param("appId") appId: string) {
-        return ResponseDto.Success(await Application.findOneOrFail(appId));
-    }
-
-    @Delete(":id/application/:appId")
-    @UseGuards(new AuthorizeForOrg('REMOVE_APPLICATION'))
-    @ApiOperation({summary: 'Remove application from organization'})
-    public async removeApp(@Headers("org") org: Organization, @Param("appId") appId: string) {
-        return ResponseDto.Success(await org.removeApplication(appId));
-    }
+    
 }

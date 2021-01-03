@@ -1,3 +1,4 @@
+import { PrivilegeDto } from "src/dtos/privilege.dto";
 import { BaseEntity, Column, CreateDateColumn, Entity, getConnection, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Application } from "./application.entity";
 import { Organization } from "./organization.entity";
@@ -25,6 +26,15 @@ export class Privilege extends BaseEntity {
 
     @ManyToOne(() => Application, app => app.privileges, {nullable: true})
     public application?: Application;
+
+    public async updateFromDTO(dto: PrivilegeDto) {
+        if (this.locked) {
+            throw new Error('Privilege is locked');
+        }
+        this.name = dto.name;
+        this.locked = dto.locked;
+        await this.save();
+    }
 
     public static async createPrivilege(name: string, locked = false) {
         const priv = new Privilege();

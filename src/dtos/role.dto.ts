@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsArray, IsNotEmpty, IsString } from "class-validator";
+import { IsArray, IsBoolean, IsNotEmpty, IsString } from "class-validator";
 
 export class RoleDto {
 
@@ -7,6 +7,10 @@ export class RoleDto {
     @IsNotEmpty()
     @ApiProperty()
     public name: string;
+
+    @IsBoolean()
+    @ApiProperty()
+    public locked: boolean;
 
     @IsArray()
     @ApiProperty({description: 'List of privileges to belong in the role'})

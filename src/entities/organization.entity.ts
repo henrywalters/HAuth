@@ -1,5 +1,6 @@
 import { OrganizationDto } from "src/dtos/organization.dto";
 import { PrivilegeDto } from "src/dtos/privilege.dto";
+import { RoleDto } from "src/dtos/role.dto";
 import Language from "src/lib/Language";
 import { BaseEntity, Column, CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Application } from "./application.entity";
@@ -86,8 +87,17 @@ export class Organization extends BaseEntity {
         })
     }
 
+    public async getPrivilege(id: string) {
+        return await Privilege.findOneOrFail({
+            where: {
+                organization: this,
+                id,
+            }
+        })
+    }
+
     public async getPrivilegeByName(name: string) {
-        return await Privilege.find({
+        return await Privilege.findOne({
             where: {
                 organization: this,
                 name,
@@ -111,7 +121,53 @@ export class Organization extends BaseEntity {
     }
 
     public async removePrivilege(id: string) {
-        this.privileges = this.privileges.filter(p => p.id !== id);
+        this.privileges = this.privileges.filter(p => p.id !== id || p.locked);
+        await this.save();
+    }
+    
+    public async getRoles() {
+        return await Role.find({
+            where: {
+                organization: this,
+            }
+        })
+    }
+
+    public async getRole(id: string) {
+        return await Role.findOneOrFail({
+            where: {
+                organization: this,
+                id,
+            }
+        })
+    }
+
+    public async getRoleByName(name: string) {
+        return await Role.findOne({
+            where: {
+                organization: this,
+                name,
+            }
+        })
+    }
+
+    public async createRole(dto: RoleDto) {
+        if (await this.getRoleByName(dto.name)) {
+            throw new Error('Role with this name already exists');
+        }
+
+        const role = await Role.createRole(dto.name, await Privilege.findByIds(dto.privilegeIds));
+
+        this.roles = this.roles ? this.roles : [];
+        this.roles.push(role);
+
+        await this.save();
+
+        return role;
+    }
+
+    public async removeRole(id: string) {
+        this.roles = this.roles.filter(r => r.id !== id || r.locked);
         await this.save();
     }
 

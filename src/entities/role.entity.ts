@@ -1,3 +1,5 @@
+import { PrivilegeDto } from "src/dtos/privilege.dto";
+import { RoleDto } from "src/dtos/role.dto";
 import { BaseEntity, Column, CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Application } from "./application.entity";
 import { Organization } from "./organization.entity";
@@ -34,7 +36,13 @@ export class Role extends BaseEntity {
     })
     public privileges: Privilege[];
 
-    
+    public async updateFromDto(dto: RoleDto) {
+        this.name = dto.name;
+        this.privileges = await Privilege.findByIds(dto.privilegeIds);
+        this.locked = dto.locked;
+        await this.save();
+    }
+
     public static async createRole(name: string, privileges: Array<Privilege>, locked: boolean = false) {
         const role = new Role();
         role.name = name;

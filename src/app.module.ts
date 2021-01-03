@@ -8,6 +8,10 @@ import { Authentication } from './lib/Authentication';
 import { AuthenticationMiddleware } from './lib/Authentication.middleware';
 import { OrganizationController } from './controllers/organization.controller';
 import { LoadOrgMiddleware } from './lib/LoadOrg.middleware';
+import { UserController } from './controllers/user.controller';
+import { PrivilegeController } from './controllers/privilege.controller';
+import { PrivilegeDto } from './dtos/privilege.dto';
+import { RoleController } from './controllers/role.controller';
 
 @Module({
   imports: [
@@ -17,7 +21,14 @@ import { LoadOrgMiddleware } from './lib/LoadOrg.middleware';
   }),
   TypeOrmModule.forRoot(),
   ],
-  controllers: [AppController, ApplicationController, OrganizationController],
+  controllers: [
+    AppController, 
+    ApplicationController,
+    OrganizationController,
+    UserController,
+    PrivilegeController,
+    RoleController,
+  ],
   providers: [AppService, Authentication],
 })
 export class AppModule {
@@ -26,6 +37,12 @@ export class AppModule {
     .forRoutes({path: "*", method: RequestMethod.ALL})
 
     consumer.apply(LoadOrgMiddleware)
-    .forRoutes(OrganizationController);
+    .forRoutes(
+      OrganizationController, 
+      ApplicationController, 
+      UserController, 
+      PrivilegeController, 
+      RoleController
+    );
   }
 }
