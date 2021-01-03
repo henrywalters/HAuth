@@ -23,7 +23,14 @@ export class AuthorizeForOrg implements CanActivate {
 
         if (!request.headers.user) return false;
 
-        const privilege = await Privilege.getOrganizationPrivilege(this.privilegeName, orgId);
+        const privilege = await Privilege.findOne({
+            where: {
+                organization: {
+                    id: orgId,
+                },
+                name: this.privilegeName,
+            }
+        })
 
         console.log(privilege);
 

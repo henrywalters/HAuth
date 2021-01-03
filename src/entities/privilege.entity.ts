@@ -20,14 +20,11 @@ export class Privilege extends BaseEntity {
     @Column()
     public name: string;
 
-    @ManyToMany(() => Organization, org => org.privileges)
-    public organizations: Organization[];
+    @ManyToOne(() => Organization, org => org.privileges, {nullable: true})
+    public organization?: Organization;
 
-    @ManyToMany(() => Privilege)
-    @JoinTable({
-        name: "privileges_allowed_to_enable"
-    })
-    public privilegesAllowedToEnable: Privilege[];
+    @ManyToOne(() => Application, app => app.privileges, {nullable: true})
+    public application?: Application;
 
     public static async createPrivilege(name: string, locked = false) {
         const priv = new Privilege();
@@ -43,19 +40,5 @@ export class Privilege extends BaseEntity {
             privileges.push(await this.createPrivilege(name, locked));
         }
         return privileges;
-    }
-
-    public static async getOrganizationPrivilege(name: string, orgId: string) {
-        return await Privilege.createQueryBuilder('p')
-            .innerJoin('organization_privileges', 'op', 'op.organizationId = :orgId and op.privilegeId = p.id', {orgId})
-            .where('p.name = :name', {name})
-            .getOne();
-    }
-
-    public static async getApplicationPrivilege(name: string, appId: string) {
-        return await Privilege.createQueryBuilder('p')
-            .innerJoin('application_privileges', 'ap', 'ap.application_id = :appId and ap.privilegeId = p.id', {appId})
-            .where('p.name = :name', {name})
-            .getOne();
     }
 }

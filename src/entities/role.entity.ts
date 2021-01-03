@@ -21,8 +21,12 @@ export class Role extends BaseEntity {
     @Column()
     public name: string;
 
-    @ManyToMany(() => Organization, org => org.roles)
-    public organizations: Organization[];
+    @ManyToOne(() => Organization, org => org.roles, {nullable: true})
+    public organization?: Organization;
+
+    @ManyToOne(() => Application, app => app.roles, {nullable: true})
+    public application?: Application;
+
 
     @ManyToMany(() => Privilege, {eager: true})
     @JoinTable({
@@ -30,9 +34,7 @@ export class Role extends BaseEntity {
     })
     public privileges: Privilege[];
 
-    @ManyToOne(() => Application)
-    public application: Application;
-
+    
     public static async createRole(name: string, privileges: Array<Privilege>, locked: boolean = false) {
         const role = new Role();
         role.name = name;

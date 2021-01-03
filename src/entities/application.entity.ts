@@ -25,16 +25,10 @@ export class Application extends BaseEntity {
     @OneToMany(() => Client, client => client.application)
     public clients: Client[];
 
-    @ManyToMany(() => Role)
-    @JoinTable({
-        name: 'application_roles',
-    })
+    @OneToMany(() => Role, role => role.application)
     public roles: Role[];
 
-    @ManyToMany(() => Privilege)
-    @JoinTable({
-        name: 'application_privileges'
-    })
+    @OneToMany(() => Privilege, privilege => privilege.application)
     public privileges: Privilege[];
 
     public async updateFromDTO(dto: ApplicationDto) {

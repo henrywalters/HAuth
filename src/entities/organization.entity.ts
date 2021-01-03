@@ -53,16 +53,10 @@ export class Organization extends BaseEntity {
     @OneToMany(() => Application, app => app.organization)
     public applications: Application[];
 
-    @ManyToMany(() => Role)
-    @JoinTable({
-        name: 'organization_roles',
-    })
+    @OneToMany(() => Role, role => role.organization)
     public roles: Role[];
 
-    @ManyToMany(() => Privilege)
-    @JoinTable({
-        name: 'organization_privileges'
-    })
+    @OneToMany(() => Privilege, privilege => privilege.organization)
     public privileges: Privilege[];
 
     public async addUser(email: string) {
@@ -85,13 +79,24 @@ export class Organization extends BaseEntity {
     }
 
     public async getPrivileges() {
-        return await Privilege.createQueryBuilder('p')
-            .innerJoin('p.organizations', 'organization', 'organization.id = :id', {id: this.id})
-            .getMany();
+        return await Privilege.find({
+            where: {
+                organization: this,
+            }
+        })
+    }
+
+    public async getPrivilegeByName(name: string) {
+        return await Privilege.find({
+            where: {
+                organization: this,
+                name,
+            }
+        })
     }
 
     public async addPrivilege(dto: PrivilegeDto) {
-        if (await Privilege.getOrganizationPrivilege(dto.name, this.id)) {
+        if (await this.getPrivilegeByName(dto.name)) {
             throw new Error("Privilege with this name already exists");
         }
 
