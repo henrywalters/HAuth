@@ -1,9 +1,9 @@
 import { Injectable, Res } from '@nestjs/common';
 import { OAuth2Client } from 'google-auth-library';
-import { StandardLoginDto, StandardRegisterDto } from 'src/dtos/authentication.dto';
+import { GoogleLoginDto, GoogleRegisterDto, StandardLoginDto, StandardRegisterDto } from 'src/dtos/authentication.dto';
 import { ApiResponse, ResponseDto } from 'src/dtos/response.dto';
 import { Organization } from 'src/entities/organization.entity';
-import { User } from 'src/entities/user.entity';
+import { AuthType, User } from 'src/entities/user.entity';
 import Crypto from 'src/utilities/crypto';
 import Language from './Language';
 const jwt = require('jsonwebtoken');
@@ -27,6 +27,15 @@ export class Authentication {
         this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
     }
 
+    public async getGoogleUser(email: string) {
+        return await User.findOne({
+            where: {
+                email,
+                authType: AuthType.Google,
+            }
+        })
+    }
+
     public async verifyGoogleIdToken(idToken: string) {
         const ticket = await this.googleClient.verifyIdToken({
             idToken,
@@ -35,6 +44,48 @@ export class Authentication {
 
         const payload = ticket.getPayload();
         console.log(payload);
+        return payload;
+    }
+
+    public async verifyGoogleUser(req: GoogleLoginDto): Promise<ApiResponse<User, string>> {
+        const verification = await this.verifyGoogleIdToken(req.idToken);
+        const user = await this.getGoogleUser(verification.email);
+        if (!user) {
+            return ResponseDto.Error(Language.USER_404);
+        }
+        return ResponseDto.Success(user);
+    }
+
+    public async createGoogleUser(req: GoogleRegisterDto) {
+        const verification = await this.verifyGoogleIdToken(req.idToken);
+        const errors = {};
+        const user = new User();
+        user.email = verification.email;
+        user.thumbnailUrl = verification.picture;
+        user.authType = AuthType.Google;
+        user.organizations = [];
+
+        if (await this.getGoogleUser(verification.email)) {
+            return ResponseDto.Error(Language.GOOGLE_ACCOUNT_EXISTS);
+        }
+
+        if (req.organizationId) {
+            const org = await Organization.findOne(req.organizationId);
+            if (!org) {
+                return ResponseDto.Error(Language.ORGANIZATION_404);
+            }
+
+            if (org.restrictUsersToDomain && !user.belongsToDomain(org.domain)) {
+                return ResponseDto.Error(Language.USER_INVALID_DOMAIN);
+            }
+
+            user.organizations.push(org);
+        }
+
+        await user.save();
+
+        return ResponseDto.Success(user);
+
     }
 
     public async createStandardUser(req: StandardRegisterDto) {
@@ -135,6 +186,13 @@ export class Authentication {
                 else res(token);
             })
         });
+    }
+
+    public static async generateTokenSet(user: User) {
+        return {
+            'accessToken': await Authentication.generateAccessToken(user),
+            'refreshToken': await Authentication.generateRefreshToken(user),
+        }
     }
 
     public static async validateToken(token: string): Promise<ValidatedToken> {

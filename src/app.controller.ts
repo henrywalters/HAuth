@@ -1,23 +1,31 @@
-import { Body, Controller, Get, Headers, Post, Query, Render, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Post, Query, Render, Res, UseGuards } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
 import { AppService } from './app.service';
-import { RefreshDto, StandardLoginDto, StandardRegisterDto } from './dtos/authentication.dto';
+import { GoogleLoginDto, RefreshDto, StandardLoginDto, StandardRegisterDto } from './dtos/authentication.dto';
 import { ResponseDto } from './dtos/response.dto';
 import { User } from './entities/user.entity';
 import { Authentication, TokenType } from './lib/Authentication';
 import { Authorize } from './lib/Authorization.guard';
 import Language from './lib/Language';
-import Crypto from "./utilities/crypto";
 
 @Controller("v1")
 export class AppController {
   constructor(private readonly appService: AppService, private readonly authentication: Authentication) {}
 
   @Get("login")
-  @Render('index')
+  @Render('login')
   @ApiOperation({summary: 'Access the universal login-page'})
   getLogin() {
     return { clientId: process.env.GOOGLE_CLIENT_ID };
+  }
+
+  @Get("register")
+  @Render('register')
+  @ApiOperation({summary: 'Access the universal register page'})
+  getRegister() {
+    return {
+      clientId: process.env.GOOGLE_CLIENT_ID,
+    }
   }
 
   @Get("version")
@@ -40,10 +48,20 @@ export class AppController {
   public async postLogin(@Body() req: StandardLoginDto) {
     const res = await this.authentication.verifyStandardUser(req);
     if (!res.success) return res;
-    return ResponseDto.Success({
-      'accessToken': await Authentication.generateAccessToken(res.result),
-      'refreshToken': await Authentication.generateRefreshToken(res.result),
-    })
+    return ResponseDto.Success(await Authentication.generateTokenSet(res.result));
+  }
+
+  @Post('login-google')
+  @ApiOperation({summary: 'Login using google identity token'})
+  public async postGoogleLogin(@Body() req: GoogleLoginDto) {
+    try {
+      const res = await this.authentication.verifyGoogleUser(req);
+      if (!res.success) return res;
+      return ResponseDto.Success(await Authentication.generateTokenSet(res.result));
+    } catch (e) {
+      console.log(e);
+      return ResponseDto.Error(e.message);
+    }
   }
 
   @Post('refresh')

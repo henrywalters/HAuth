@@ -36,3 +36,20 @@ export class RefreshDto {
     @ApiProperty()
     public refreshToken: string;
 }
+
+export class GoogleLoginDto {
+    @IsString()
+    @ApiProperty()
+    public idToken: string;
+}
+
+export class GoogleRegisterDto {
+    @IsString()
+    @ApiProperty()
+    public idToken: string;
+    
+    @IsString()
+    @IsOptional()
+    @ApiPropertyOptional()
+    public organizationId?: string;
+}

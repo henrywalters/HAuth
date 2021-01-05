@@ -1,6 +1,6 @@
-# Hauth - fast and simple authentication and authorization for businesses
+![Hoth image](https://api.henrywalters.dev/v1/user-file/content/93992d98-49bd-4856-b0ed-648c9152c3b5.png)
 
-![Hoth image](https://c4.wallpaperflare.com/wallpaper/99/807/813/star-wars-battlefront-star-wars-video-games-x-wing-wallpaper-preview.jpg)
+# Hauth - fast and simple authentication and authorization for businesses
 
 HAuth is an authorization microservice which provides:
 

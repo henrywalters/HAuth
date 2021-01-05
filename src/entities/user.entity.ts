@@ -3,7 +3,7 @@ import { Organization } from "./organization.entity";
 import { Privilege } from "./privilege.entity";
 import { Role } from "./role.entity";
 
-export enum AuthorizationType {
+export enum AuthType {
     Standard = 'Standard',
     Google = 'Google',
 }
@@ -28,8 +28,8 @@ export class User extends BaseEntity {
     @Column({nullable: true})
     public thumbnailUrl?: string;
 
-    @Column({type: "enum", enum: AuthorizationType})
-    public authType: AuthorizationType;
+    @Column({type: "enum", enum: AuthType})
+    public authType: AuthType;
 
     @Column({nullable: true})
     public password?: string;

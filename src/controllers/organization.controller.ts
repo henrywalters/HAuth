@@ -44,12 +44,7 @@ export class OrganizationController {
         }))
     }
 
-    @Get(":id/role")
-    @UseGuards(new AuthorizeForOrg('VIEW_ROLE'))
-    @ApiOperation({summary: 'View organization roles'})
-    public async getRoles(@Headers("org") org: Organization) {
-        return ResponseDto.Success(await org.getRoles());
-    }
+    
     
     
 }

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+    <script src="https://apis.google.com/js/api:client.js"></script>
+    <script src="https://apis.google.com/js/platform.js?onload=renderGoogle" async defer></script>
+    <meta charset="utf-8" />
+    <meta name="google-signin-client_id" content="{{clientId}}">
+    <title>Login</title>
+  </head>
+  <body>
+    <div class="container">
+      <form class="card login-container mt-5" onsubmit='event.preventDefault(); login()'>
+        <div class="card-body">
+            <h1 class="text-center mb-3">Login</h1>
+            <div class="form-group">
+              <label>Email:</label>
+              <input id="email" name="email" class="form-control" />
+            </div>
+            <div class="form-group mt-3">
+              <label>Password:</label>
+              <input id="password" name="password" class="form-control" type="password" />
+            </div>
+            <div class="form-group mt-4">
+              <button class="btn btn-primary form-control">Login</button>
+            </div>
+            <hr />
+            <div class="col-md-12"> 
+              <div id='google-signin' />
+            </div>
+            <p class="text-center mt-5"><a class="text-center" href="/v1/register">Sign-Up</a></p>
+        </div>
+      </form>
+    </div>
+
+  </body>
+  <footer>
+    <script>
+
+      function login() {
+        var email = document.getElementById('email').value;
+        var password = document.getElementById('password').value;
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/v1/login');
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onload = function() {
+          console.log('Signed in as: ' + xhr.responseText);
+        };
+        xhr.send(`email=${email}&password=${password}`);
+      }
+
+      function onSignIn(googleUser) {
+        var profile = googleUser.getBasicProfile();
+        var id_token = googleUser.getAuthResponse().id_token;
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/v1/login-google');
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onload = function() {
+          console.log('Signed in as: ' + xhr.responseText);
+        };
+        xhr.send('idToken=' + id_token);
+      }
+
+      function signOut() {
+        var auth2 = gapi.auth2.getAuthInstance();
+        auth2.signOut().then(function () {
+          console.log('User signed out.');
+        });
+      }
+
+      function renderGoogle() {
+        console.log("Rendering GOogle")
+        gapi.signin2.render('google-signin', {
+          scope: 'profile email',
+          theme: 'dark',
+          width: '100%',
+          onSuccess: onSignIn,
+        })
+      }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW" crossorigin="anonymous"></script>
+    
+  </footer>
+</html>
+
+<style>
+  body {
+    background-color: #0d6efd;
+  }
+
+  .card {
+    max-width: 400px;
+    margin: auto;
+  }
+
+  #google-signin {
+    background-color: #4285F4;
+    font-family: Roboto;
+  }
+
+  .btn-google {
+    color: #545454;
+    background-color: #ffffff;
+    box-shadow: 0 1px 2px 1px #ddd
+  }  
+
+  span.icon {
+    background: url('/google_signin_buttons/web/vector/btn_google_dark_normal_ios.svg');
+    display: inline-block;
+    width: 42px;
+    height: 42px;
+  }
+</style>
