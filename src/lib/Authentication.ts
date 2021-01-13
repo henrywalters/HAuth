@@ -27,11 +27,28 @@ export class Authentication {
         this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
     }
 
+    public async getUser(email: string) {
+        return await User.findOne({
+            where: {
+                email,
+            }
+        })
+    }
+
     public async getGoogleUser(email: string) {
         return await User.findOne({
             where: {
                 email,
                 authType: AuthType.Google,
+            }
+        })
+    }
+
+    public async getStandardUser(email: string) {
+        return await User.findOne({
+            where: {
+                email,
+                authType: AuthType.Standard,
             }
         })
     }
@@ -58,14 +75,16 @@ export class Authentication {
 
     public async createGoogleUser(req: GoogleRegisterDto) {
         const verification = await this.verifyGoogleIdToken(req.idToken);
+
         const errors = {};
         const user = new User();
+        user.name = verification.name;
         user.email = verification.email;
         user.thumbnailUrl = verification.picture;
         user.authType = AuthType.Google;
         user.organizations = [];
 
-        if (await this.getGoogleUser(verification.email)) {
+        if (await this.getUser(verification.email)) {
             return ResponseDto.Error(Language.GOOGLE_ACCOUNT_EXISTS);
         }
 
@@ -94,7 +113,7 @@ export class Authentication {
 
         const errors = {};
 
-        if (await User.findOne({where: {email: req.email}})) {
+        if (await this.getUser(req.email)) {
             errors['email'] = Language.EMAIL_EXISTS;
         }
 
@@ -136,11 +155,7 @@ export class Authentication {
     }
 
     public async verifyStandardUser(req: StandardLoginDto): Promise<ApiResponse<User, string>> {
-        const user = await User.findOne({
-            where: {
-                email: req.email,
-            }
-        })
+        const user = await this.getStandardUser(req.email);
 
         if (!user) return ResponseDto.Error(Language.INVALID_LOGIN);
 

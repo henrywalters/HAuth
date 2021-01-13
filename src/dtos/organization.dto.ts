@@ -1,14 +1,15 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsBoolean, IsEmail, IsString } from "class-validator";
+import { IsBoolean, IsEmail, IsNotEmpty, IsString } from "class-validator";
 import { IsDomain } from "src/validators/domain.validator";
 
 export class OrganizationDto {
     @IsString()
+    @IsNotEmpty()
     @ApiProperty()
     public name: string;
 
     @IsDomain({
-        message: "Must be valid domain such as google.com or henrywalters.dev"
+        message: "domain must be a valid domain such as google.com or henrywalters.dev"
     })
     @ApiProperty()
     public domain: string;

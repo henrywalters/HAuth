@@ -1,5 +1,8 @@
+import { Res } from "@nestjs/common";
 import { PrivilegeDto } from "src/dtos/privilege.dto";
+import { ResponseDto } from "src/dtos/response.dto";
 import { RoleDto } from "src/dtos/role.dto";
+import Language from "src/lib/Language";
 import { BaseEntity, Column, CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Application } from "./application.entity";
 import { Organization } from "./organization.entity";
@@ -37,10 +40,22 @@ export class Role extends BaseEntity {
     public privileges: Privilege[];
 
     public async updateFromDto(dto: RoleDto) {
+        if (this.locked) {
+            throw new Error('Privilege is locked');
+        }
+
+        const existing = await this.organization.getRoleByName(dto.name);
+
+        if (existing && existing.id !== this.id) {
+            return ResponseDto.Error({name: Language.ROLE_EXISTS});
+        }
+
         this.name = dto.name;
         this.privileges = await Privilege.findByIds(dto.privilegeIds);
         this.locked = dto.locked;
         await this.save();
+
+        return ResponseDto.Success(this);
     }
 
     public static async createRole(name: string, privileges: Array<Privilege>, locked: boolean = false) {

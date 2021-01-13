@@ -64,6 +64,18 @@ export class AppController {
     }
   }
 
+  @Post('register-google')
+  @ApiOperation({summary: 'Register using google identity token'})
+  public async postGoogleRegister(@Body() req: GoogleLoginDto) {
+    try {
+      const res = await this.authentication.createGoogleUser(req);
+      if (!res.success) {return res;}
+      return ResponseDto.Success(res);
+    } catch (e) {
+      return ResponseDto.Error(e.message);
+    }
+  }
+
   @Post('refresh')
   @ApiOperation({summary: 'Refresh an access token using a refresh token'})
   public async postRefresh(@Body() req: RefreshDto) {

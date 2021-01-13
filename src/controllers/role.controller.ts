@@ -20,7 +20,7 @@ export class RoleController {
     @UseGuards(new AuthorizeForOrg('ADD_ROLE'))
     @ApiOperation({summary: 'Create a new role'})
     public async createRole(@Headers("org") org: Organization, @Body() req: RoleDto) {
-        return ResponseDto.Success(await org.createRole(req));
+        return await org.createRole(req);
     }
 
     @Get(":roleId")
@@ -36,8 +36,7 @@ export class RoleController {
     public async editRole(@Headers("org") org: Organization, @Param("roleId") roleId: string, @Body() req: RoleDto) {
         try {
             const role = await org.getRole(roleId);
-            await role.updateFromDto(req);
-            return ResponseDto.Success(role);
+            return await role.updateFromDto(req);
         } catch (e) {
             return ResponseDto.Error(e.message);
         }

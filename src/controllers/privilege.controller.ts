@@ -20,7 +20,7 @@ export class PrivilegeController {
     @ApiOperation({summary: 'Create a new privilege for the organization'})
     public async createPrivilege(@Headers("org") org: Organization, @Body() req: PrivilegeDto) {
         try {
-            return ResponseDto.Success(await org.addPrivilege(req));
+            return await org.addPrivilege(req);
         } catch (e) {
             return ResponseDto.Error(e.message);
         }
@@ -32,8 +32,8 @@ export class PrivilegeController {
     public async updatePrivilege(@Headers("org") org: Organization, @Param("privilegeId") privilegeId: string, @Body() req: PrivilegeDto) {
         try {
             const privilege = await org.getPrivilege(privilegeId);
-            await privilege.updateFromDTO(req);
-            return ResponseDto.Success(privilege);
+            
+            return await privilege.updateFromDTO(req);
         } catch (e) {
             return ResponseDto.Error(e.message);
         }

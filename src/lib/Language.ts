@@ -7,6 +7,8 @@ enum Language {
     FAILED_REFRESH = 'Failed to refresh access token',
     USER_404 = 'User does not exist',
     USER_INVALID_DOMAIN = 'Email must be belong to organization domain',
+    PRIVILEGE_EXISTS = 'Privilege with this name already exists',
+    ROLE_EXISTS = 'Role with this name already exists',
 }
 
 export default Language;

@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Headers, Body, Delete, Post } from "@nestjs/common";
+import { Controller, Get, UseGuards, Headers, Body, Delete, Post, Param } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation } from "@nestjs/swagger";
 import { AddUserDto } from "src/dtos/organization.dto";
 import { ResponseDto } from "src/dtos/response.dto";
@@ -26,12 +26,12 @@ export class UserController {
         }
     }
 
-    @Delete()
+    @Delete(":userId")
     @UseGuards(new AuthorizeForOrg('REMOVE_USER'))
     @ApiOperation({summary: 'Remove user from organization'})
-    public async removeUser(@Headers('org') org: Organization, @Body() req: AddUserDto) {
+    public async removeUser(@Headers('org') org: Organization, @Param("userId") id: string) {
         try {
-            return await ResponseDto.Success(await org.removeUser(req.email));
+            return await ResponseDto.Success(await org.removeUser(id));
         } catch (e) {
             return await ResponseDto.Error(e.message);
         }

@@ -1,5 +1,7 @@
+import { Res } from "@nestjs/common";
 import { OrganizationDto } from "src/dtos/organization.dto";
 import { PrivilegeDto } from "src/dtos/privilege.dto";
+import { ResponseDto } from "src/dtos/response.dto";
 import { RoleDto } from "src/dtos/role.dto";
 import Language from "src/lib/Language";
 import { BaseEntity, Column, CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
@@ -83,6 +85,9 @@ export class Organization extends BaseEntity {
         return await Privilege.find({
             where: {
                 organization: this,
+            },
+            order: {
+                name: 'ASC',
             }
         })
     }
@@ -92,7 +97,8 @@ export class Organization extends BaseEntity {
             where: {
                 organization: this,
                 id,
-            }
+            },
+            relations: ['organization'],
         })
     }
 
@@ -107,7 +113,7 @@ export class Organization extends BaseEntity {
 
     public async addPrivilege(dto: PrivilegeDto) {
         if (await this.getPrivilegeByName(dto.name)) {
-            throw new Error("Privilege with this name already exists");
+            return ResponseDto.Error({name: Language.PRIVILEGE_EXISTS});
         }
 
         const privilege = await Privilege.createPrivilege(dto.name, dto.locked);
@@ -117,7 +123,7 @@ export class Organization extends BaseEntity {
 
         await this.save();
 
-        return privilege;
+        return ResponseDto.Success(this);
     }
 
     public async removePrivilege(id: string) {
@@ -126,11 +132,12 @@ export class Organization extends BaseEntity {
     }
     
     public async getRoles() {
-        return await Role.find({
-            where: {
-                organization: this,
-            }
-        })
+        return await Role.createQueryBuilder('r')
+            .leftJoinAndSelect('r.privileges', 'privilege')
+            .where('r.organizationId = :orgId', {orgId: this.id})
+            .orderBy('r.name', 'ASC')
+            .addOrderBy('privilege.name', 'ASC')
+            .getMany();
     }
 
     public async getRole(id: string) {
@@ -138,7 +145,8 @@ export class Organization extends BaseEntity {
             where: {
                 organization: this,
                 id,
-            }
+            },
+            relations: ['organization'],
         })
     }
 
@@ -153,7 +161,7 @@ export class Organization extends BaseEntity {
 
     public async createRole(dto: RoleDto) {
         if (await this.getRoleByName(dto.name)) {
-            throw new Error('Role with this name already exists');
+            return ResponseDto.Error({name: Language.ROLE_EXISTS});
         }
 
         const role = await Role.createRole(dto.name, await Privilege.findByIds(dto.privilegeIds));
@@ -163,7 +171,7 @@ export class Organization extends BaseEntity {
 
         await this.save();
 
-        return role;
+        return ResponseDto.Success(this);
     }
 
     public async removeRole(id: string) {
@@ -171,11 +179,13 @@ export class Organization extends BaseEntity {
         await this.save();
     }
 
-    public async removeUser(email: string) {
+    public async removeUser(id: string) {
         const user = await User.createQueryBuilder('user')
-            .innerJoin('user.organizations', 'organization', 'organization.id = :id', {id: this.id})
-            .where('user.email = :email', {email,})
+            .innerJoinAndSelect('user.organizations', 'organization', 'organization.id = :id', {id: this.id})
+            .where('user.id = :id', {id,})
             .getOne();
+
+        console.log(user);
 
         user.organizations = user.organizations.filter(org => org.id !== this.id);
         await user.save();

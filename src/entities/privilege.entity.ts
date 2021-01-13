@@ -1,4 +1,7 @@
+import { Res } from "@nestjs/common";
 import { PrivilegeDto } from "src/dtos/privilege.dto";
+import { ResponseDto } from "src/dtos/response.dto";
+import Language from "src/lib/Language";
 import { BaseEntity, Column, CreateDateColumn, Entity, getConnection, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Application } from "./application.entity";
 import { Organization } from "./organization.entity";
@@ -31,9 +34,20 @@ export class Privilege extends BaseEntity {
         if (this.locked) {
             throw new Error('Privilege is locked');
         }
+
+        const existing = await this.organization.getPrivilegeByName(dto.name);
+
+        if (existing && this.id !== existing.id) {
+            return ResponseDto.Error({
+                name: Language.PRIVILEGE_EXISTS,
+            })
+        }
+
         this.name = dto.name;
         this.locked = dto.locked;
         await this.save();
+
+        return ResponseDto.Success(this);
     }
 
     public static async createPrivilege(name: string, locked = false) {
