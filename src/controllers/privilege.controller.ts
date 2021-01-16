@@ -3,16 +3,20 @@ import { ApiBearerAuth, ApiOperation } from "@nestjs/swagger";
 import { PrivilegeDto } from "src/dtos/privilege.dto";
 import { ResponseDto } from "src/dtos/response.dto";
 import { Organization } from "src/entities/organization.entity";
+import { Authorization } from "src/lib/Authorization";
 import { AuthorizeForOrg } from "src/lib/AuthorizeForOrg.guard";
 
 @Controller("v1/organization/:id/privilege")
 @ApiBearerAuth()
 export class PrivilegeController {
+    
+    constructor(private readonly auth: Authorization) {}
+
     @Get()
     @UseGuards(new AuthorizeForOrg('VIEW_PRIVILEGE'))
     @ApiOperation({summary: 'View organization privileges'})
     public async viewPrivileges(@Headers("org") org: Organization) {
-        return ResponseDto.Success(await org.getPrivileges());
+        return ResponseDto.Success(await this.auth.getPrivileges(org));
     }
 
     @Post()
@@ -20,7 +24,8 @@ export class PrivilegeController {
     @ApiOperation({summary: 'Create a new privilege for the organization'})
     public async createPrivilege(@Headers("org") org: Organization, @Body() req: PrivilegeDto) {
         try {
-            return await org.addPrivilege(req);
+            
+            return await this.auth.addPrivilege(org, req);
         } catch (e) {
             return ResponseDto.Error(e.message);
         }
@@ -31,9 +36,7 @@ export class PrivilegeController {
     @ApiOperation({summary: 'Edit a privilege'})
     public async updatePrivilege(@Headers("org") org: Organization, @Param("privilegeId") privilegeId: string, @Body() req: PrivilegeDto) {
         try {
-            const privilege = await org.getPrivilege(privilegeId);
-            
-            return await privilege.updateFromDTO(req);
+            return ResponseDto.Success(await this.auth.updatePrivilege(org, privilegeId, req));
         } catch (e) {
             return ResponseDto.Error(e.message);
         }
@@ -43,7 +46,7 @@ export class PrivilegeController {
     @UseGuards(new AuthorizeForOrg('REMOVE_PRIVILEGE'))
     @ApiOperation({summary: 'Remove a privilege'})
     public async removePrivilege(@Headers("org") org: Organization, @Param("privilegeId") privilegeId: string) {
-        await org.removePrivilege(privilegeId);
+        await this.auth.removePrivilege(org, privilegeId);
         return ResponseDto.Success(void 0);
     }
 }

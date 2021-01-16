@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards, Headers, Get, Delete, Param} from "@nestjs/common";
+import { Body, Controller, Post, UseGuards, Headers, Get, Delete, Param, Put, Res} from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation } from "@nestjs/swagger";
 import { ApplicationDto } from "src/dtos/application.dto";
 import { ResponseDto } from "src/dtos/response.dto";
@@ -27,14 +27,31 @@ export class ApplicationController {
     @Get(":appId")
     @UseGuards(new AuthorizeForOrg('VIEW_APPLICATION'))
     @ApiOperation({summary: 'View an applications details'})
-    public async getApp(@Param("appId") appId: string) {
-        return ResponseDto.Success(await Application.findOneOrFail(appId));
+    public async getApp(@Headers("org") org: Organization, @Param("appId") appId: string) {
+        return ResponseDto.Success(await org.getApplication(appId));
+    }
+
+    @Put(":appId")
+    @UseGuards(new AuthorizeForOrg('EDIT_APPLICATION'))
+    @ApiOperation({summary: 'Update an appliations details'})
+    public async updateApp(@Headers("org") org: Organization, @Param("appId") appId: string, @Body() req: ApplicationDto) {
+        try {
+            const app = await org.getApplication(appId);
+            await app.updateFromDTO(req);
+            return ResponseDto.Success(app);
+        } catch (e) {
+            return ResponseDto.Error(e.message);
+        }
     }
 
     @Delete(":appId")
     @UseGuards(new AuthorizeForOrg('REMOVE_APPLICATION'))
     @ApiOperation({summary: 'Remove application from organization'})
     public async removeApp(@Headers("org") org: Organization, @Param("appId") appId: string) {
-        return ResponseDto.Success(await org.removeApplication(appId));
+        try {
+            return ResponseDto.Success(await org.removeApplication(appId));
+        } catch (e) {
+            return ResponseDto.Error(e.message);
+        }
     }
 }

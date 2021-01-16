@@ -40,22 +40,12 @@ export class Role extends BaseEntity {
     public privileges: Privilege[];
 
     public async updateFromDto(dto: RoleDto) {
-        if (this.locked) {
-            throw new Error('Privilege is locked');
-        }
-
-        const existing = await this.organization.getRoleByName(dto.name);
-
-        if (existing && existing.id !== this.id) {
-            return ResponseDto.Error({name: Language.ROLE_EXISTS});
-        }
-
         this.name = dto.name;
         this.privileges = await Privilege.findByIds(dto.privilegeIds);
         this.locked = dto.locked;
         await this.save();
 
-        return ResponseDto.Success(this);
+        return this;
     }
 
     public static async createRole(name: string, privileges: Array<Privilege>, locked: boolean = false) {

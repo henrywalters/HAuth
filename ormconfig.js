@@ -12,7 +12,7 @@ const Config = [
         database: process.env.DB_NAME,
         port: process.env.DB_PORT,
         entities: [ "dist/entities/**/*.entity{.ts,.js}" ],
-        logging: true,
+        logging: false,
         synchronize: false,
     },
     {

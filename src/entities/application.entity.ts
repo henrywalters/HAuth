@@ -1,4 +1,5 @@
 import { ApplicationDto } from "src/dtos/application.dto";
+import { Securable, SecureType } from "src/lib/Securable.interface";
 import { BaseEntity, Column, CreateDateColumn, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Client } from "./client.entity";
 import { Organization } from "./organization.entity";
@@ -6,7 +7,10 @@ import { Privilege } from "./privilege.entity";
 import { Role } from "./role.entity";
 
 @Entity()
-export class Application extends BaseEntity {
+export class Application extends BaseEntity implements Securable {
+
+    public secureType: SecureType = SecureType.APPLICATION;
+    
     @PrimaryGeneratedColumn("uuid")
     public id: string;
 

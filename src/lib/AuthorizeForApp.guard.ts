@@ -4,7 +4,7 @@ import { Privilege } from "src/entities/privilege.entity";
 import { User } from "src/entities/user.entity";
 
 @Injectable()
-export class AuthorizeForOrg implements CanActivate {
+export class AuthorizeForApp implements CanActivate {
 
     constructor(private readonly privilegeName: string) {}
 
@@ -14,10 +14,10 @@ export class AuthorizeForOrg implements CanActivate {
 
         const request = context.switchToHttp().getRequest();
 
-        const orgId = request.params.id;
+        const appId = request.params.appId;
 
-        if (!orgId) {
-            console.warn("id parameter expected to call AuthorizeForOrg");
+        if (!appId) {
+            console.warn("id parameter expected to call AuthorizeForApp");
             return false;
         }
 
@@ -25,8 +25,8 @@ export class AuthorizeForOrg implements CanActivate {
 
         const privilege = await Privilege.findOne({
             where: {
-                organization: {
-                    id: orgId,
+                application: {
+                    id: appId,
                 },
                 name: this.privilegeName,
             }

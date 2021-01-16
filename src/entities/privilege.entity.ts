@@ -31,23 +31,11 @@ export class Privilege extends BaseEntity {
     public application?: Application;
 
     public async updateFromDTO(dto: PrivilegeDto) {
-        if (this.locked) {
-            throw new Error('Privilege is locked');
-        }
-
-        const existing = await this.organization.getPrivilegeByName(dto.name);
-
-        if (existing && this.id !== existing.id) {
-            return ResponseDto.Error({
-                name: Language.PRIVILEGE_EXISTS,
-            })
-        }
-
         this.name = dto.name;
         this.locked = dto.locked;
         await this.save();
 
-        return ResponseDto.Success(this);
+        return this;
     }
 
     public static async createPrivilege(name: string, locked = false) {

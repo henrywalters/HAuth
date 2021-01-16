@@ -9,6 +9,8 @@ enum Language {
     USER_INVALID_DOMAIN = 'Email must be belong to organization domain',
     PRIVILEGE_EXISTS = 'Privilege with this name already exists',
     ROLE_EXISTS = 'Role with this name already exists',
+    PRIVILEGE_LOCKED = 'Privilege is locked and can not be changed',
+    ROLE_LOCKED = 'Role is locked and can not be changed',
 }
 
 export default Language;

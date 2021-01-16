@@ -12,6 +12,8 @@ import { UserController } from './controllers/user.controller';
 import { PrivilegeController } from './controllers/privilege.controller';
 import { PrivilegeDto } from './dtos/privilege.dto';
 import { RoleController } from './controllers/role.controller';
+import { Authorization } from './lib/Authorization';
+import { ApplicationPrivilegeController } from './controllers/applicationPrivilege.controller';
 
 @Module({
   imports: [
@@ -28,8 +30,9 @@ import { RoleController } from './controllers/role.controller';
     UserController,
     PrivilegeController,
     RoleController,
+    ApplicationPrivilegeController,
   ],
-  providers: [AppService, Authentication],
+  providers: [AppService, Authentication, Authorization],
 })
 export class AppModule {
   async configure(consumer: MiddlewareConsumer) {
