@@ -6,6 +6,7 @@ import { Application } from "src/entities/application.entity";
 import { Organization } from "src/entities/organization.entity";
 import { Authorization } from "src/lib/Authorization";
 import { AuthorizeForApp } from "src/lib/AuthorizeForApp.guard";
+import { AuthorizeForOrg } from "src/lib/AuthorizeForOrg.guard";
 
 @Controller("v1/organization/:id/application/:appId/privilege")
 @ApiBearerAuth()
@@ -14,14 +15,14 @@ export class ApplicationPrivilegeController {
     constructor(private readonly auth: Authorization) {}
 
     @Get()
-    @UseGuards(new AuthorizeForApp('VIEW_APPLICATION_PRIVILEGE'))
+    @UseGuards(new AuthorizeForOrg('VIEW_APPLICATION_PRIVILEGE'))
     @ApiOperation({summary: 'View organization privileges'})
     public async viewPrivileges(@Headers("app") app: Application) {
         return ResponseDto.Success(await this.auth.getPrivileges(app));
     }
 
     @Post()
-    @UseGuards(new AuthorizeForApp('ADD_APPLICATION_PRIVILEGE'))
+    @UseGuards(new AuthorizeForOrg('ADD_APPLICATION_PRIVILEGE'))
     @ApiOperation({summary: 'Create a new privilege for the organization'})
     public async createPrivilege(@Headers("app") app: Application, @Body() req: PrivilegeDto) {
         try {
@@ -33,7 +34,7 @@ export class ApplicationPrivilegeController {
     }
 
     @Put(":privilegeId")
-    @UseGuards(new AuthorizeForApp('EDIT_APPLICATION_PRIVILEGE'))
+    @UseGuards(new AuthorizeForOrg('EDIT_APPLICATION_PRIVILEGE'))
     @ApiOperation({summary: 'Edit a privilege'})
     public async updatePrivilege(@Headers("app") app: Application, @Param("privilegeId") privilegeId: string, @Body() req: PrivilegeDto) {
         try {
@@ -44,7 +45,7 @@ export class ApplicationPrivilegeController {
     }
 
     @Delete(":privilegeId")
-    @UseGuards(new AuthorizeForApp('REMOVE_APPLICATION_PRIVILEGE'))
+    @UseGuards(new AuthorizeForOrg('REMOVE_APPLICATION_PRIVILEGE'))
     @ApiOperation({summary: 'Remove a privilege'})
     public async removePrivilege(@Headers("app") app: Application, @Param("privilegeId") privilegeId: string) {
         await this.auth.removePrivilege(app, privilegeId);
