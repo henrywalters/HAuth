@@ -11,6 +11,7 @@ enum Language {
     ROLE_EXISTS = 'Role with this name already exists',
     PRIVILEGE_LOCKED = 'Privilege is locked and can not be changed',
     ROLE_LOCKED = 'Role is locked and can not be changed',
+    CANT_REMOVE_OWNER = 'Can not remove the owner from organization',
 }
 
 export default Language;

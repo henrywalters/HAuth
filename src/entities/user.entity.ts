@@ -52,6 +52,18 @@ export class User extends BaseEntity {
     })
     public privileges: Privilege[];
 
+    @ManyToMany(() => Role, {eager: true})
+    @JoinTable({
+        name: "user_application_roles",
+    })
+    public applicationRoles: Role[];
+
+    @ManyToMany(() => Privilege, {eager: true})
+    @JoinTable({
+        name: "user_application_privileges"
+    })
+    public applicationPrivileges: Privilege[];
+
     public static async findByEmail(email: string) {
         return await User.findOne({
             where: {

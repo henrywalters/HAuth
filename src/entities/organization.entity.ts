@@ -2,7 +2,7 @@
 import { OrganizationDto } from "src/dtos/organization.dto";
 import Language from "src/lib/Language";
 import { Securable, SecureType } from "src/lib/Securable.interface";
-import { BaseEntity, Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { BaseEntity, Column, CreateDateColumn, Db, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Application } from "./application.entity";
 import { Privilege } from "./privilege.entity";
 import { Role } from "./role.entity";
@@ -90,13 +90,16 @@ export class Organization extends BaseEntity implements Securable {
         return newUser;
     }
 
-    public async removeUser(id: string) {
+    public async getUser(id: string) {
         const user = await User.createQueryBuilder('user')
-            .innerJoinAndSelect('user.organizations', 'organization', 'organization.id = :id', {id: this.id})
+            .innerJoinAndSelect('user.organizations', 'organization', 'organization.id = :orgId', {orgId: this.id})
             .where('user.id = :id', {id,})
-            .getOne();
+            .getOneOrFail();
+        return user;
+    }
 
-        console.log(user);
+    public async removeUser(id: string) {
+        const user = await this.getUser(id);
 
         user.organizations = user.organizations.filter(org => org.id !== this.id);
         await user.save();
