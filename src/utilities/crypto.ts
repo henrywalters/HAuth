@@ -67,7 +67,6 @@ export default class Crypto {
     }
 
     public static getText(buffer: Buffer) {
-        console.log(process.env.TEXT_ENCODING)
         return buffer.toString(process.env.TEXT_ENCODING as BufferEncoding);
     }
 }

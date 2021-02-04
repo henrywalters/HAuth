@@ -1,6 +1,7 @@
-import { BaseEntity, Column, CreateDateColumn, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { BaseEntity, Column, CreateDateColumn, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Organization } from "./organization.entity";
 import { Privilege } from "./privilege.entity";
+import { RequestLog } from "./requestLog.entity";
 import { Role } from "./role.entity";
 
 export enum AuthType {
@@ -64,12 +65,25 @@ export class User extends BaseEntity {
     })
     public applicationPrivileges: Privilege[];
 
+    @OneToMany(() => RequestLog, log => log.user)
+    public logs: RequestLog[];
+
     public static async findByEmail(email: string) {
         return await User.findOne({
             where: {
                 email,
             }
         });
+    }
+
+    public async getAssociatedOrganizations(): Promise<Organization[]> {
+
+        const query = await User.createQueryBuilder('u')
+        .where('u.id = :id', {id: this.id})
+        .leftJoin('user_organizations', 'uo', 'uo.userId = u.id')
+        .leftJoinAndMapMany('u.organizations', 'organization', 'o', 'o.ownerId = u.id or o.id = uo.organizationId');
+
+        return (await query.getOne()).organizations;
     }
 
     public belongsToDomain(domain: string) {
@@ -87,6 +101,28 @@ export class User extends BaseEntity {
 
         for (const role of this.roles) {
             for (const priv of role.privileges) {
+                if (priv.name === privilege.name) {
+                    console.log(priv);
+                    console.log(privilege);
+                }
+                if (priv.id === privilege.id) {
+                    return true;
+                }
+            }
+        }
+
+        for (const priv of this.applicationPrivileges) {
+            if (priv.id === privilege.id) {
+                return true;
+            }
+        }
+
+        for (const role of this.applicationRoles) {
+            for (const priv of role.privileges) {
+                if (priv.name === privilege.name) {
+                    console.log(priv);
+                    console.log(privilege);
+                }
                 if (priv.id === privilege.id) {
                     return true;
                 }
@@ -94,5 +130,14 @@ export class User extends BaseEntity {
         }
 
         return false;
+    }
+
+    public cleaned() {
+        return {
+            id: this.id,
+            name: this.name,
+            email: this.email,
+            thumbnailUrl: this.thumbnailUrl,
+        }
     }
 }

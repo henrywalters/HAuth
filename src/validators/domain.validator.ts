@@ -8,8 +8,6 @@ function IsValidDomain(domain: string | undefined): boolean {
 
 export function IsDomain(validationOptions?: ValidationOptions) {
     return function (object: Object, propertyName: string) {
-        console.log(propertyName)
-        console.log(object);
         registerDecorator({
             name: "isDomain",
             target: object.constructor,

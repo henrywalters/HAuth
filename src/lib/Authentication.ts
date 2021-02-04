@@ -2,6 +2,7 @@ import { Injectable, Res } from '@nestjs/common';
 import { OAuth2Client } from 'google-auth-library';
 import { GoogleLoginDto, GoogleRegisterDto, StandardLoginDto, StandardRegisterDto } from 'src/dtos/authentication.dto';
 import { ApiResponse, ResponseDto } from 'src/dtos/response.dto';
+import { AppToken } from 'src/entities/appToken.entity';
 import { Organization } from 'src/entities/organization.entity';
 import { AuthType, User } from 'src/entities/user.entity';
 import Crypto from 'src/utilities/crypto';
@@ -60,7 +61,6 @@ export class Authentication {
         });
 
         const payload = ticket.getPayload();
-        console.log(payload);
         return payload;
     }
 
@@ -179,7 +179,6 @@ export class Authentication {
                 expiresIn: parseInt(process.env.ACCESS_TOKEN_DUR),
                 subject: TokenType.ACCESS_TOKEN, 
             }, (err, token) => {
-                console.log(err, token)
                 if (err) rej(err);
                 else res(token);
             })

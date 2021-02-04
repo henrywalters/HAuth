@@ -16,6 +16,8 @@ import { RoleController } from './controllers/role.controller';
 import { Authorization } from './lib/Authorization';
 import { ApplicationPrivilegeController } from './controllers/applicationPrivilege.controller';
 import { ApplicationRoleController } from './controllers/applicationRole.controller';
+import { LogRequestMiddleware } from './lib/LogRequest.middleware';
+import { AppTokenController } from './controllers/appToken.controller';
 
 @Module({
   imports: [
@@ -28,6 +30,7 @@ import { ApplicationRoleController } from './controllers/applicationRole.control
   controllers: [
     AppController, 
     ApplicationController,
+    AppTokenController,
     OrganizationController,
     UserController,
     PrivilegeController,
@@ -39,13 +42,16 @@ import { ApplicationRoleController } from './controllers/applicationRole.control
 })
 export class AppModule {
   async configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AuthenticationMiddleware)
+    consumer.apply(LogRequestMiddleware, AuthenticationMiddleware)
     .forRoutes({path: "*", method: RequestMethod.ALL})
 
     consumer.apply(LoadAppMiddleware)
     .forRoutes(
+      ApplicationController,
       ApplicationPrivilegeController,
       ApplicationRoleController,
+      AppTokenController,
+      UserController,
     )
 
 

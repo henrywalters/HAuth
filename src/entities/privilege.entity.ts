@@ -5,6 +5,7 @@ import Language from "src/lib/Language";
 import { BaseEntity, Column, CreateDateColumn, Entity, getConnection, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Application } from "./application.entity";
 import { Organization } from "./organization.entity";
+import { User } from "./user.entity";
 
 @Entity()
 export class Privilege extends BaseEntity {
@@ -29,6 +30,9 @@ export class Privilege extends BaseEntity {
 
     @ManyToOne(() => Application, app => app.privileges, {nullable: true})
     public application?: Application;
+
+    @ManyToMany(() => User, user => user.privileges)
+    public users: User[];
 
     public async updateFromDTO(dto: PrivilegeDto) {
         this.name = dto.name;

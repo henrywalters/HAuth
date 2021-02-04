@@ -6,6 +6,7 @@ import { join } from 'path';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './http-exception.filter';
 import { AuthenticationMiddleware } from './lib/Authentication.middleware';
+import Set from './lib/Set';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(
@@ -30,6 +31,6 @@ async function bootstrap() {
   app.setBaseViewsDir(join(__dirname, '..', 'views'))
   app.setViewEngine('hbs');
   
-  await app.listen(3000);
+  await app.listen(4200);
 }
 bootstrap();

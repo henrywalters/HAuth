@@ -1,11 +1,16 @@
 import { Injectable, NotImplementedException } from "@nestjs/common";
+import { AuthorizationSummary } from "src/dtos/authorization.dto";
 import { PrivilegeDto } from "src/dtos/privilege.dto";
 import { ResponseDto } from "src/dtos/response.dto";
 import { RoleDto } from "src/dtos/role.dto";
 import { Privilege } from "src/entities/privilege.entity";
 import { Role } from "src/entities/role.entity";
+import { User } from "src/entities/user.entity";
+import { generateMap } from "./Functional";
 import Language from "./Language";
+import List from "./List";
 import { Securable, SecureType } from "./Securable.interface";
+import Set from "./Set";
 
 @Injectable()
 export class Authorization {
@@ -27,6 +32,30 @@ export class Authorization {
             default:
                 throw new NotImplementedException("Secure Type where clause not defined");
         }
+    }
+
+    public async authorize(securable: Securable, user: User, privilegeNames: string[]): Promise<AuthorizationSummary> {
+        const summary = {
+            passed: [],
+            failed: [],
+        };
+
+        const privileges = await this.getPrivilegesByNames(securable, privilegeNames);
+
+        console.log(privileges);
+        const privilegeMap = generateMap<Privilege>(privileges, (p) => p.name);
+
+        console.log(privilegeMap);
+
+        for (const pName of privilegeNames) {
+            if (privilegeMap[pName] && user.hasPrivilege(privilegeMap[pName])) {
+                summary.passed.push(pName);
+            } else {
+                summary.failed.push(pName);
+            }
+        }
+
+        return summary;
     }
 
     public async getPrivileges(securable: Securable) {
@@ -59,6 +88,13 @@ export class Authorization {
         })
     }
 
+    public async getPrivilegesByNames(securable: Securable, names: string[]) {
+        const query = await Privilege.createQueryBuilder('p')
+            .where(`p.${securable.secureType}Id = :${securable.secureType}`, {[securable.secureType]: securable.id})
+            .andWhere('name in (:...names)', {names});
+        return await query.getMany();
+    }
+
     public async addPrivilege(securable: Securable, dto: PrivilegeDto) {
         if (await this.getPrivilegeByName(securable, dto.name)) {
             return ResponseDto.Error({name: Language.PRIVILEGE_EXISTS});
@@ -82,8 +118,6 @@ export class Authorization {
         }
 
         const existing = await this.getPrivilegeByName(securable, dto.name);
-
-        console.log(existing);
 
         if (existing && privilege.id !== existing.id) {
             return ResponseDto.Error({
@@ -165,5 +199,66 @@ export class Authorization {
     public async removeRole(securable: Securable, id: string) {
         securable.roles = securable.roles.filter(r => r.id !== id || r.locked);
         await securable.save();
+    }
+
+    public async getAuthorizedUser(securable: Securable, userId: string): Promise<User> {
+        const query = await User.createQueryBuilder('u')
+            .leftJoinAndSelect('u.roles', 'r', `r.${securable.secureType}Id = :${securable.secureType}`, {[securable.secureType]: securable.id})
+            .leftJoinAndSelect('u.privileges', 'p', `p.${securable.secureType}Id = :${securable.secureType}`, {[securable.secureType]: securable.id})
+            .leftJoinAndSelect('r.privileges', 'rp')
+            .leftJoinAndSelect('u.applicationRoles', 'ar', `ar.${securable.secureType}Id = :${securable.secureType}`, {[securable.secureType]: securable.id})
+            .leftJoinAndSelect('ar.privileges', 'arp')
+            .leftJoinAndSelect('u.applicationPrivileges', 'ap', `ap.${securable.secureType}Id = :${securable.secureType}`, {[securable.secureType]: securable.id})
+            .leftJoinAndSelect(`p.${securable.secureType}`, `p_${securable.secureType}`)
+            .leftJoinAndSelect(`r.${securable.secureType}`, `r_${securable.secureType}`)
+            .leftJoinAndSelect(`ap.${securable.secureType}`, `ap_${securable.secureType}`)
+            .leftJoinAndSelect(`ar.${securable.secureType}`, `ar_${securable.secureType}`)
+            .where('u.id = :userId', {userId});
+
+        return await query.getOneOrFail();
+    }
+
+    public async getUserPrivileges(securable: Securable, userId: string): Promise<Privilege[]> {
+
+        return (await User.createQueryBuilder('u')
+            .leftJoinAndSelect('u.privileges', 'p', `p.${securable.secureType}Id = :${securable.secureType}`, {[securable.secureType]: securable.id})
+            .where('u.id = :userId', {userId})
+            .getOne()).privileges;
+    }
+
+    public async getUserRoles(securable: Securable, userId: string): Promise<Role[]> {
+        return (await User.createQueryBuilder('u')
+            .leftJoinAndSelect('u.roles', 'r', `r.${securable.secureType}Id = :${securable.secureType}`, {[securable.secureType]: securable.id})
+            .leftJoinAndSelect('r.privileges', 'p')
+            .where('u.id = :userId', {userId})
+            .getOne()).roles;
+    }
+
+    public async assignUserPrivileges(securable: Securable, userId: string, privilegeIds: string[]) {
+        const relation = securable.secureType === SecureType.APPLICATION ? 'applicationPrivileges': 'privileges';
+        const user = await this.getAuthorizedUser(securable, userId);
+        const privileges = await Privilege.findByIds(privilegeIds);
+
+        user[relation] = user[relation].filter(priv => {
+            return priv[securable.secureType].id !== securable.id;
+        }).concat(privileges);
+
+        await user.save();
+
+        return user;
+    }
+
+    public async assignUserRoles(securable: Securable, userId: string, roleIds: string[]) {
+        const relation = securable.secureType === SecureType.APPLICATION ? 'applicationRoles' : 'roles';
+        const user = await this.getAuthorizedUser(securable, userId);
+        const roles = await Role.findByIds(roleIds);
+
+        user[relation] = user[relation].filter(role => {
+            return role[securable.secureType].id !== securable.id;
+        }).concat(roles);
+
+        await user.save();
+
+        return user;
     }
 }

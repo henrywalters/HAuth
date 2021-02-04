@@ -2,7 +2,7 @@
 import { OrganizationDto } from "src/dtos/organization.dto";
 import Language from "src/lib/Language";
 import { Securable, SecureType } from "src/lib/Securable.interface";
-import { BaseEntity, Column, CreateDateColumn, Db, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { BaseEntity, Column, CreateDateColumn, Db, Entity, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Application } from "./application.entity";
 import { Privilege } from "./privilege.entity";
 import { Role } from "./role.entity";
@@ -34,6 +34,18 @@ const DEFAULT_ORG_PRIVILEGES: string[] = [
     'VIEW_ROLE',
     'REMOVE_ROLE',
     'EDIT_ROLE',
+    'VIEW_USER_PRIVILEGE',
+    'VIEW_USER_ROLE',
+    'VIEW_USER_APPLICATION_PRIVILEGE',
+    'VIEW_USER_APPLICATION_ROLE',
+    'ASSIGN_USER_ROLE',
+    'ASSIGN_USER_PRIVILEGE',
+    'ASSIGN_USER_APPLICATION_PRIVILEGE',
+    'ASSIGN_USER_APPLICATION_ROLE',
+    'ADD_APPLICATION_TOKEN',
+    'VIEW_APPLICATION_TOKEN',
+    'EDIT_APPLICATION_TOKEN',
+    'REMOVE_APPLICATION_TOKEN',
 ];
 
 @Entity()
@@ -71,6 +83,9 @@ export class Organization extends BaseEntity implements Securable {
     @OneToMany(() => Privilege, privilege => privilege.organization)
     public privileges: Privilege[];
 
+    @ManyToMany(() => User, user => user.organizations)
+    public users: User[];
+
     public async addUser(email: string) {
         const newUser = await User.findByEmail(email);
         if (!newUser) {
@@ -84,8 +99,6 @@ export class Organization extends BaseEntity implements Securable {
         newUser.organizations = newUser.organizations ? newUser.organizations : [];
         newUser.organizations.push(this);
         await newUser.save();
-
-        console.log(newUser);
 
         return newUser;
     }

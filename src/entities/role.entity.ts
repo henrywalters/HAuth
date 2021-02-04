@@ -7,6 +7,7 @@ import { BaseEntity, Column, CreateDateColumn, Entity, JoinTable, ManyToMany, Ma
 import { Application } from "./application.entity";
 import { Organization } from "./organization.entity";
 import { Privilege } from "./privilege.entity";
+import { User } from "./user.entity";
 
 @Entity()
 export class Role extends BaseEntity {
@@ -32,6 +33,8 @@ export class Role extends BaseEntity {
     @ManyToOne(() => Application, app => app.roles, {nullable: true})
     public application?: Application;
 
+    @ManyToMany(() => User, user => user.roles)
+    public users: User[];
 
     @ManyToMany(() => Privilege, {eager: true})
     @JoinTable({

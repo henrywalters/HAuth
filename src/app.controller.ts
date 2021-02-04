@@ -1,11 +1,14 @@
-import { Body, Controller, Get, Headers, Post, Query, Render, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Post, Query, Render, Req, Res, UseGuards } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
+import { Request } from 'express';
 import { AppService } from './app.service';
 import { GoogleLoginDto, RefreshDto, StandardLoginDto, StandardRegisterDto } from './dtos/authentication.dto';
 import { ResponseDto } from './dtos/response.dto';
+import { AppToken } from './entities/appToken.entity';
 import { User } from './entities/user.entity';
+import { UserSession } from './entities/userSession.entity';
 import { Authentication, TokenType } from './lib/Authentication';
-import { Authorize } from './lib/Authorization.guard';
+import { Authenticate, AuthenticateUser } from './lib/Authentication.guard';
 import Language from './lib/Language';
 
 @Controller("v1")
@@ -37,10 +40,11 @@ export class AppController {
   }
 
   @Get('self')
-  @UseGuards(Authorize)
+  @UseGuards(Authenticate)
   @ApiOperation({summary: 'Return the details of the current authenticated user'})
-  public async getSelf(@Headers("user") user: User) {
-    return ResponseDto.Success(user);
+  public async getSelf(@Headers("user") user: User, @Headers('apptoken') appToken: AppToken, @Headers() req: Request) {
+    console.log("Getting self");
+    return ResponseDto.Success(user ? user.cleaned() : appToken.cleaned());
   }
 
   @Post('login')
@@ -48,7 +52,18 @@ export class AppController {
   public async postLogin(@Body() req: StandardLoginDto) {
     const res = await this.authentication.verifyStandardUser(req);
     if (!res.success) return res;
+    await UserSession.createUserSession(res.result);
     return ResponseDto.Success(await Authentication.generateTokenSet(res.result));
+  }
+
+  @Post('logout')
+  @UseGuards(AuthenticateUser)
+  @ApiOperation({summary: 'Logout of the current user and destroy their session. Requires a new login accross devices'})
+  public async logout(@Headers("user") user: User) {
+    const session = await UserSession.getCurrentSession(user);
+    if (session) {
+      await session.endSession();
+    }
   }
 
   @Post('login-google')
@@ -57,9 +72,9 @@ export class AppController {
     try {
       const res = await this.authentication.verifyGoogleUser(req);
       if (!res.success) return res;
+      await UserSession.createUserSession(res.result);
       return ResponseDto.Success(await Authentication.generateTokenSet(res.result));
     } catch (e) {
-      console.log(e);
       return ResponseDto.Error(e.message);
     }
   }
@@ -81,6 +96,10 @@ export class AppController {
   public async postRefresh(@Body() req: RefreshDto) {
     try {
       const decoded = await Authentication.validateToken(req.refreshToken);
+      const session = await UserSession.getCurrentSession(decoded.user);
+      if (!session) {
+        throw new Error();
+      }
       if (decoded.type !== TokenType.REFRESH_TOKEN) {
         console.warn("Tried to refresh token with access token");
         throw new Error();
